@@ -22,40 +22,80 @@ function useDropdown() {
   return ctx
 }
 
-export const DropdownMenuTrigger = ({ children, asChild }: { children: ReactElement; asChild?: boolean }) => {
-  const { toggle } = useDropdown()
+type AsChildProps = {
+  onClick?: (e: React.MouseEvent) => void
+} & Record<string, any>
+
+export const DropdownMenuTrigger = ({
+  children,
+  asChild,
+}: {
+  children: ReactElement<AsChildProps>;
+  asChild?: boolean;
+}) => {
+  const { toggle } = useDropdown();
 
   if (asChild && React.isValidElement(children)) {
-    return cloneElement(children, { onClick: (e: any) => { children.props.onClick?.(e); toggle() } })
+    return React.cloneElement(children, {
+      onClick: (e: React.MouseEvent) => {
+        (children.props as AsChildProps).onClick?.(e);
+        toggle();
+      },
+    });
   }
 
   return (
     <button onClick={toggle} type="button">
       {children}
     </button>
-  )
-}
+  );
+};
 
-export const DropdownMenuContent = forwardRef<HTMLDivElement, { children: ReactNode; className?: string; align?: string }>(
-  ({ children, className = "", align }, ref) => {
-    const { open } = useDropdown()
-    if (!open) return null
-    return (
-      <div ref={ref} className={className} role="menu" data-align={align}>
-        {children}
-      </div>
-    )
-  }
-)
+
+
+export const DropdownMenuContent = forwardRef<
+  HTMLDivElement, 
+  { children: ReactNode; className?: string; align?: string }
+>(({ children, className = "", align }, ref) => {
+  const { open } = useDropdown()
+  if (!open) return null
+  
+  const alignClasses = align === "end" ? "right-0" : "left-0"
+  
+  return (
+    <div 
+      ref={ref} 
+      className={`absolute mt-2 ${alignClasses} min-w-[200px] rounded-md border border-border bg-popover p-1 shadow-md z-50 ${className}`}
+      role="menu"
+    >
+      {children}
+    </div>
+  )
+})
 
 DropdownMenuContent.displayName = "DropdownMenuContent"
 
-export const DropdownMenuItem = ({ children, onClick }: { children: ReactNode; onClick?: () => void }) => {
+export const DropdownMenuItem = ({ 
+  children, 
+  onClick 
+}: { 
+  children: ReactNode; 
+  onClick?: () => void 
+}) => {
+  const { setOpen } = useDropdown()
+  
+  const handleClick = () => {
+    if (onClick) {
+      onClick()
+    }
+    setOpen(false)
+  }
+  
   return (
     <button
       role="menuitem"
-      onClick={onClick}
-      className="w-full text-left px-3 py-2 hover:bg-secondary transition-colors"
+      onClick={handleClick}
+      className="w-full text-left px-3 py-2 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
     >
       {children}
     </button>

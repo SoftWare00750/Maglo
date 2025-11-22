@@ -17,7 +17,8 @@ export default function InvoiceDetailPage() {
   const router = useRouter()
   const { getInvoiceById, updateInvoice, deleteInvoice } = useMaglo()
   const { toasts, addToast, removeToast } = useToast()
-  const invoice = getInvoiceById(params.id as string)
+  const invoiceId = Array.isArray(params.id) ? params.id[0] : params.id ?? ""
+  const invoice = getInvoiceById(invoiceId)
   const [showAddItem, setShowAddItem] = useState(false)
 
   if (!invoice) {
@@ -57,10 +58,12 @@ export default function InvoiceDetailPage() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleDelete} className="text-red-600">
-                <Trash2 size={16} className="mr-2" />
-                Delete Invoice
-              </DropdownMenuItem>
+             <DropdownMenuItem onClick={handleDelete}>
+  <div className="flex items-center text-red-600">
+    <Trash2 size={16} className="mr-2" />
+    Delete Invoice
+  </div>
+</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -117,22 +120,28 @@ export default function InvoiceDetailPage() {
                       <th className="text-left py-3 text-xs font-semibold text-muted-foreground">AMOUNT</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {invoice.items?.map((item) => (
-                      <tr key={item.id} className="border-b border-border">
-                        <td className="py-3 text-sm text-foreground">{item.name}</td>
-                        <td className="py-3 text-sm text-foreground">{item.quantity}</td>
-                        <td className="py-3 text-sm text-foreground">${item.rate.toFixed(2)}</td>
-                        <td className="py-3 text-sm font-medium text-foreground">${item.amount.toFixed(2)}</td>
-                      </tr>
-                    )) || (
-                      <tr className="border-b border-border">
-                        <td colSpan={4} className="py-3 text-sm text-foreground">
-                          iPhone 13 Pro Max
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
+                 <tbody>
+  {invoice.items && invoice.items.length > 0 ? (
+    invoice.items.map((item) => (
+      <tr key={item.id} className="border-b border-border">
+        <td className="py-3 text-sm text-foreground">{item.name}</td>
+        <td className="py-3 text-sm text-foreground">{item.quantity}</td>
+        <td className="py-3 text-sm text-foreground">
+          ${item.rate.toFixed(2)}
+        </td>
+        <td className="py-3 text-sm font-medium text-foreground">
+          ${item.amount.toFixed(2)}
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr className="border-b border-border">
+      <td colSpan={4} className="py-3 text-sm text-foreground text-center">
+        No items found
+      </td>
+    </tr>
+  )}
+</tbody>
                 </table>
               </div>
 

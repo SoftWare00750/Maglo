@@ -1,8 +1,13 @@
+/* Tailwind v4 core import */
 @import "tailwindcss";
+
+/* Animation plugin (this is fine if installed) */
 @import "tw-animate-css";
 
+/* Tailwind v4 custom variant (valid) */
 @custom-variant dark (&:is(.dark *));
 
+/* Light mode variables */
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -39,6 +44,7 @@
   --sidebar-ring: #cddc39;
 }
 
+/* Dark mode variables */
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -74,9 +80,11 @@
   --sidebar-ring: #cddc39;
 }
 
+/* Tailwind v4 theme variables */
 @theme inline {
   --font-sans: "Geist", "Geist Fallback";
   --font-mono: "Geist Mono", "Geist Mono Fallback";
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -96,15 +104,18 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -115,6 +126,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Base layer */
 @layer base {
   * {
     @apply border-border outline-ring/50;
