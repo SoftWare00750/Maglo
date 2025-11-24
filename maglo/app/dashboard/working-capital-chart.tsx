@@ -1,6 +1,6 @@
 "use client"
 
-import { Card } from "../ui/card"
+import { Card } from "../../components/ui/card"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
 const data = [

@@ -2,9 +2,9 @@
 
 import { useMaglo } from "@/lib/context"
 import Link from "next/link"
-import { Card } from "../ui/card"
-import { Avatar, AvatarFallback } from "../ui/avatar"
-import { Badge } from "../ui/badge"
+import { Card } from "../../components/ui/card"
+import { Avatar, AvatarFallback } from "../../components/ui/avatar"
+import { Badge } from "../../components/ui/badge"
 import { MoreVertical } from "lucide-react"
 
 export default function RecentInvoices() {

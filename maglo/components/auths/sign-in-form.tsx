@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -81,8 +82,14 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
           {/* Logo */}
           <div className="mb-12 lg:mb-16">
             <div className="flex items-center gap-2">
-              {/* Logo Placeholder - Space for app logo */}
-              <div className="w-8 h-8 bg-gray-300 rounded flex items-center justify-center text-xs font-bold">Logo</div>
+              {/* Logo Image */}
+              <Image
+                src="/logo.png"
+                alt="Maglo Logo"
+                width={32}
+                height={32}
+                className="rounded"
+              />
               <h1 className="text-2xl font-bold text-foreground">Maglo.</h1>
             </div>
           </div>
@@ -176,10 +183,22 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
         </div>
 
         {/* Right side - Image placeholder */}
-        <div className="hidden lg:flex w-1/2 bg-gradient-to-b from-gray-100 to-gray-200 items-center justify-center">
+        <div className="hidden lg:flex w-1/2 bg-gradient-to-b from-gray-100 to-gray-200 items-center justify-center" style={{ position: 'relative' }}>
+        
+        <Image
+                src="/decorate.png"
+                alt="decorate"
+                fill
+                style={{ objectFit: "fill", objectPosition:"absolute"}}
+                className="rounded"
+              />
+
           <div className="text-center text-gray-500">
-            <p className="text-lg font-medium">Decorative Image</p>
-            <p className="text-sm">(Add your branded image here)</p>
+             
+            <p className="text-lg font-medium"></p>
+            <p className="text-sm"> 
+              
+              </p>
           </div>
         </div>
       </div>
