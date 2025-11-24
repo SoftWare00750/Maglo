@@ -6,6 +6,7 @@ import { useState } from "react"
 import { useToast } from "@/lib/toast"
 import Sidebar from "@/components/ui/sidebar"
 import TopBar from "@/components/ui/top-bar"
+import Image from "next/image"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -88,9 +89,14 @@ export default function InvoiceDetailPage() {
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-3">
                       {/* Logo Placeholder */}
-                      <div className="w-10 h-10 bg-primary rounded flex items-center justify-center flex-shrink-0">
-                        <span className="text-sm font-bold text-primary-foreground">L</span>
-                      </div>
+                        <Image
+            src="/logo2.png"
+            alt="Maglo Logo"
+            width={32}
+            height={32}
+            className="rounded"
+          />
+                    
                       <div>
                         <p className="text-2xl font-bold mb-1">Maglo</p>
                         <p className="text-sm text-gray-300">sales@maglo.com</p>
