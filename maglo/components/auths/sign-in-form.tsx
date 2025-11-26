@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -23,8 +22,13 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const router = useRouter()
-  const { setUser } = useMaglo()
+  const { login } = useMaglo()
   const { toasts, addToast, removeToast } = useToast()
+
+
+  useEffect(() => {
+    document.title = "Sign In - Maglo"
+  }, [])
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -37,8 +41,8 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
 
     if (!password) {
       newErrors.password = "Password is required"
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters"
+    } else if (password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters"
     }
 
     setErrors(newErrors)
@@ -56,20 +60,20 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
     setIsLoading(true)
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
-      const newUser = {
-        id: "1",
-        name: "Mahfuzul Nabil",
-        email,
-        avatar: "MN",
-      }
-      setUser(newUser)
-      addToast("Welcome back!", "success")
-      setTimeout(() => router.push("/dashboard"), 500)
-    } catch (error) {
-      addToast("Sign in failed. Please try again.", "error")
-    } finally {
+      // Login and get user data
+      await login(email, password)
+      
+      // Show success message
+      const userName = email.split('@')[0]
+      addToast(`Welcome back, ${userName}!`, "success")
+      
+      // Wait a bit for the cookie to be set, then do a hard navigation
+      setTimeout(() => {
+        window.location.href = "/dashboard"
+      }, 500)
+      
+    } catch (error: any) {
+      addToast(error.message || "Sign in failed. Please try again.", "error")
       setIsLoading(false)
     }
   }
@@ -82,7 +86,6 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
           {/* Logo */}
           <div className="mb-12 lg:mb-16">
             <div className="flex items-center gap-2">
-              {/* Logo Image */}
               <Image
                 src="/logo.png"
                 alt="Maglo Logo"
@@ -117,6 +120,7 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
                       if (errors.email) setErrors({ ...errors, email: "" })
                     }}
                     className={errors.email ? "border-red-500" : ""}
+                    disabled={isLoading}
                   />
                   {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
                 </div>
@@ -133,6 +137,7 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
                       if (errors.password) setErrors({ ...errors, password: "" })
                     }}
                     className={errors.password ? "border-red-500" : ""}
+                    disabled={isLoading}
                   />
                   {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
                 </div>
@@ -145,6 +150,7 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
                       className="w-4 h-4 rounded border-border"
+                      disabled={isLoading}
                     />
                     <span className="text-sm text-foreground">Remember for 30 Days</span>
                   </label>
@@ -162,44 +168,41 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
                   {isLoading ? "Signing in..." : "Sign in"}
                 </Button>
 
-                {/* Sign Up Link with curved design space */}
+                {/* Sign Up Link */}
                 <div className="text-center pt-4">
                   <span className="text-sm text-muted-foreground">
                     Don't have an account?{" "}
-                    <button type="button" onClick={onToggle} className="text-primary font-medium hover:underline">
+                    <button
+                      type="button"
+                      onClick={onToggle}
+                      className="text-primary font-medium hover:underline"
+                      disabled={isLoading}
+                    >
                       Sign up for free
                     </button>
+                    {/* Decorative Image */}
+                
+                  <img 
+                    src="/curve2.png" 
+                    alt="Decorative curve" 
+                    className="ml-64"
+                  />
                   </span>
-                </div>
-                <div className="flex justify-center mt-1">
-                  <div
-                    className="h-2 bg-gray-100 rounded border-2 border-dashed border-gray-300"
-                    style={{ width: "fit-content" }}
-                  ></div>
                 </div>
               </form>
             </div>
           </div>
         </div>
 
-        {/* Right side - Image placeholder */}
-        <div className="hidden lg:flex w-1/2 bg-gradient-to-b from-gray-100 to-gray-200 items-center justify-center" style={{ position: 'relative' }}>
-        
-        <Image
-                src="/decorate.png"
-                alt="decorate"
-                fill
-                style={{ objectFit: "fill", objectPosition:"absolute"}}
-                className="rounded"
-              />
-
-          <div className="text-center text-gray-500">
-             
-            <p className="text-lg font-medium"></p>
-            <p className="text-sm"> 
-              
-              </p>
-          </div>
+        {/* Right side - Image */}
+        <div className="hidden lg:flex w-1/2 bg-gradient-to-b from-gray-100 to-gray-200 items-center justify-center relative">
+          <Image
+            src="/decorate.png"
+            alt="decorate"
+            fill
+            style={{ objectFit: "fill", objectPosition: "absolute" }}
+            className="rounded"
+          />
         </div>
       </div>
       <ToastContainer toasts={toasts} onRemove={removeToast} />

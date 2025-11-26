@@ -4,6 +4,7 @@ import { useMaglo } from "@/lib/context"
 import { useParams, useRouter } from "next/navigation"
 import { useState } from "react"
 import { useToast } from "@/lib/toast"
+import { useEffect } from "react"
 import Sidebar from "@/components/ui/sidebar"
 import TopBar from "@/components/ui/top-bar"
 import Image from "next/image"
@@ -24,6 +25,16 @@ export default function InvoiceDetailPage() {
   const invoice = getInvoiceById(invoiceId)
   const [showAddItem, setShowAddItem] = useState(false)
 
+
+
+  useEffect(() => {
+    if (invoice) {
+      document.title = `Invoice ${invoice.invoiceNumber} - Maglo`
+    } else {
+      document.title = "Invoice Details - Maglo"
+    }
+  }, [invoice])
+  
   if (!invoice) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -96,6 +107,8 @@ export default function InvoiceDetailPage() {
             height={32}
             className="rounded"
           />
+            
+          
                     
                       <div>
                         <p className="text-2xl font-bold mb-1">Maglo</p>

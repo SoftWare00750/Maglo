@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+
 import { useMaglo } from "@/lib/context"
 import Link from "next/link"
 import Sidebar from "@/components/ui/sidebar"
 import TopBar from "@/components/ui/top-bar"
+import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -24,6 +25,10 @@ export default function InvoicesPage() {
 
     return matchesSearch && matchesStatus
   })
+
+    useEffect(() => {
+    document.title = "Invoices - Maglo"
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">

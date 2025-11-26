@@ -2,7 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
+
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useMaglo } from "@/lib/context"
 import { useToast } from "@/lib/toast"
@@ -36,6 +37,11 @@ export default function CreateInvoicePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+
+   useEffect(() => {
+    document.title = "Create Invoice - Maglo"
+  }, [])
+
   const calculateVAT = () => {
     const amountNum = Number.parseFloat(amount) || 0
     const vatPercent = Number.parseFloat(vat) || 0
@@ -49,6 +55,11 @@ export default function CreateInvoicePage() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
+
+    useEffect(() => {
+    document.title = "Create Invoice - Maglo"
+  }, [])
+
 
     if (!clientName.trim()) {
       newErrors.clientName = "Client name is required"

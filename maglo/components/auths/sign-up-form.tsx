@@ -1,10 +1,8 @@
 "use client"
 
 import type React from "react"
-
+import { useState, useEffect } from "react"
 import Image from "next/image"
-import Link from "next/link"
-import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,8 +21,13 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const router = useRouter()
-  const { setUser } = useMaglo()
+  const { signup } = useMaglo()
   const { toasts, addToast, removeToast } = useToast()
+
+  useEffect(() => {
+    document.title = "Sign In - Maglo"
+  }, [])
+
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -43,8 +46,8 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
 
     if (!password) {
       newErrors.password = "Password is required"
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters"
+    } else if (password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters"
     }
 
     setErrors(newErrors)
@@ -62,19 +65,11 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
     setIsLoading(true)
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
-      const newUser = {
-        id: "1",
-        name: fullName,
-        email,
-        avatar: fullName.substring(0, 2).toUpperCase(),
-      }
-      setUser(newUser)
-      addToast(`Welcome, ${fullName}!`, "success")
-      setTimeout(() => router.push("/dashboard"), 500)
-    } catch (error) {
-      addToast("Sign up failed. Please try again.", "error")
+      await signup(fullName, email, password)
+      addToast("Account successfully created.", "success")
+      setTimeout(() => router.push("/sign-in-form"), 500)
+    } catch (error: any) {
+      addToast(error.message || "Sign up failed. Please try again.", "error")
     } finally {
       setIsLoading(false)
     }
@@ -88,15 +83,13 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
           {/* Logo */}
           <div className="mb-12 lg:mb-16">
             <div className="flex items-center gap-2">
-              {/* Logo Placeholder - Space for app logo */}
-               <Image
-                              src="/logo.png"
-                              alt="Maglo Logo"
-                              width={32}
-                              height={32}
-                              className="rounded"
-                            />
-              
+              <Image
+                src="/logo.png"
+                alt="Maglo Logo"
+                width={32}
+                height={32}
+                className="rounded"
+              />
               <h1 className="text-2xl font-bold text-foreground">Maglo.</h1>
             </div>
           </div>
@@ -107,7 +100,7 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
               {/* Form Header */}
               <div className="mb-8">
                 <h2 className="text-3xl font-bold text-foreground mb-2">Create new account</h2>
-                <p className="text-muted-foreground text-sm">Welcome back! Please enter your details</p>
+                <p className="text-muted-foreground text-sm">Welcome! Please enter your details to get started</p>
               </div>
 
               {/* Form */}
@@ -117,13 +110,14 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
                   <label className="text-sm font-medium text-foreground">Full Name</label>
                   <Input
                     type="text"
-                    placeholder="Mahfuzul Nabil"
+                    placeholder="Enter your full name"
                     value={fullName}
                     onChange={(e) => {
                       setFullName(e.target.value)
                       if (errors.fullName) setErrors({ ...errors, fullName: "" })
                     }}
                     className={errors.fullName ? "border-red-500" : ""}
+                    disabled={isLoading}
                   />
                   {errors.fullName && <p className="text-xs text-red-500">{errors.fullName}</p>}
                 </div>
@@ -140,6 +134,7 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
                       if (errors.email) setErrors({ ...errors, email: "" })
                     }}
                     className={errors.email ? "border-red-500" : ""}
+                    disabled={isLoading}
                   />
                   {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
                 </div>
@@ -156,8 +151,10 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
                       if (errors.password) setErrors({ ...errors, password: "" })
                     }}
                     className={errors.password ? "border-red-500" : ""}
+                    disabled={isLoading}
                   />
                   {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
+                  <p className="text-xs text-muted-foreground">Must be at least 8 characters</p>
                 </div>
 
                 {/* Submit Button */}
@@ -173,37 +170,37 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
                 <div className="text-center pt-4">
                   <span className="text-sm text-muted-foreground">
                     Already have an account?{" "}
-                    <button type="button" onClick={onToggle} className="text-primary font-medium hover:underline">
+                    <button
+                      type="button"
+                      onClick={onToggle}
+                      className="text-primary font-medium hover:underline"
+                      disabled={isLoading}
+                    >
                       Sign in
                     </button>
+
+                     <img 
+    src="/curve1.png" 
+    alt="Description" 
+    className="ml-72"
+   
+  />
                   </span>
-                </div>
-                {/* Moved curved design placeholder outside text container, directly below "Sign in" text */}
-                <div className="flex justify-center mt-1">
-                  <div
-                    className="h-2 bg-gray-100 rounded border-2 border-dashed border-gray-300"
-                    style={{ width: "fit-content" }}
-                  ></div>
                 </div>
               </form>
             </div>
           </div>
         </div>
 
-        {/* Right side - Image placeholder */}
-        <div className="hidden lg:flex w-1/2 bg-gradient-to-b from-gray-100 to-gray-200 items-center justify-center"  style={{ position: 'relative' }}>
-         <Image
-                        src="/decorate.png"
-                        alt="decorate"
-                        fill
-                        style={{ objectFit: "fill", objectPosition:"absolute"}}
-                        className="rounded"
-                      />
-        
-          <div className="text-center text-gray-500">
-            <p className="text-lg font-medium">Decorative Image</p>
-            <p className="text-sm">(Add your branded image here)</p>
-          </div>
+        {/* Right side - Image */}
+        <div className="hidden lg:flex w-1/2 bg-gradient-to-b from-gray-100 to-gray-200 items-center justify-center relative">
+          <Image
+            src="/decorate.png"
+            alt="decorate"
+            fill
+            style={{ objectFit: "fill", objectPosition: "absolute" }}
+            className="rounded"
+          />
         </div>
       </div>
       <ToastContainer toasts={toasts} onRemove={removeToast} />
