@@ -3,51 +3,47 @@ import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
-  const isPublicPath = path === '/'
-  
-  // CRITICAL FIX: On localhost, Appwrite uses localStorage (not cookies)
-  // So we skip middleware auth checks and let the React context handle it
   const hostname = request.nextUrl.hostname
+
+  const isPublicPath = path === '/'
+
+  // Localhost checks
   const isLocalhost = hostname === 'localhost' || 
                       hostname === '127.0.0.1' || 
                       hostname.includes('192.168')
-  
-  if (isLocalhost) {
-    console.log('🏠 Localhost detected - skipping middleware auth check')
-    console.log('✓ Allowing access to:', path)
+
+  // ⭐ Add your production hostname(s)
+  const allowedHostnames = [
+    "https://maglo-three.vercel.app/",
+    "maglo-three.vercel.app"
+  ]
+
+  // Skip middleware if hostname is not recognized
+  if (!isLocalhost && !allowedHostnames.includes(hostname)) {
+    console.log("⛔ Skipping middleware for unknown hostname:", hostname)
     return NextResponse.next()
   }
-  
-  // PRODUCTION ONLY: Check for session cookies
+
+  // Appwrite session cookie checks
   const cookies = request.cookies.getAll()
-  const projectId = '6925f7e8003628848504'
-  
+  const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || '6925f7e8003628848504'
+
   const hasSession = cookies.some(cookie => 
     cookie.name === `a_session_${projectId}` ||
     cookie.name === `a_session_${projectId}_legacy` ||
     cookie.name.startsWith('a_session_')
   )
-  
-  console.log('🌐 Production middleware check:', { 
-    path, 
-    hasSession, 
-    projectId,
-    cookieNames: cookies.map(c => c.name)
-  })
-  
-  // If logged in and trying to access login page, redirect to dashboard
+
+  console.log('🌐 Host check:', { hostname, path, hasSession })
+
   if (isPublicPath && hasSession) {
-    console.log('✅ Redirecting to dashboard - user has session')
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
-  
-  // If not logged in and trying to access protected page, redirect to login
+
   if (!isPublicPath && !hasSession) {
-    console.log('❌ Redirecting to login - no session found')
     return NextResponse.redirect(new URL('/', request.url))
   }
-  
-  console.log('✓ Allowing access to:', path)
+
   return NextResponse.next()
 }
 
