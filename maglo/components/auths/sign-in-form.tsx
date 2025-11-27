@@ -1,10 +1,10 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useMaglo } from "@/lib/context"
@@ -21,20 +21,27 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const isLoggingIn = useRef(false) // Track active login attempt
   const router = useRouter()
-  const { login, user } = useMaglo()
+  const { login, user, isLoading: authLoading } = useMaglo()
   const { toasts, addToast, removeToast } = useToast()
 
   useEffect(() => {
     document.title = "Sign In - Maglo"
   }, [])
 
-  // Redirect if already logged in (but don't interfere with login flow)
+  // Only redirect if user exists AND we're in the process of logging in
   useEffect(() => {
-    if (user && !isLoading) {
-      router.push("/dashboard")
+    if (user && isLoggingIn.current && !authLoading) {
+      console.log('🔄 Redirecting to dashboard after login')
+      // Increased delay to let toast show
+      setTimeout(() => {
+        router.push("/dashboard")
+        router.refresh()
+        isLoggingIn.current = false
+      }, 500) // 2 seconds to see the toast
     }
-  }, [user, router]) // Removed isLoading from deps to avoid interference
+  }, [user, authLoading, router])
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -64,25 +71,24 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
     }
 
     setIsLoading(true)
+    isLoggingIn.current = true // Mark that we're actively logging in
 
     try {
       // Login - this will set user state in context
       await login(email, password)
       
-      // Show success message
+      // Show success message - extract name from email
       const userName = email.split('@')[0]
-      addToast(`Welcome back, ${userName}!`, "success")
+      const capitalizedName = userName.charAt(0).toUpperCase() + userName.slice(1)
+      addToast(`Welcome back, ${capitalizedName}!`, "success")
       
-      // User state is now set, the useEffect will handle navigation
-      // But we also explicitly navigate to ensure it happens
-      router.push("/dashboard")
-      router.refresh()
+      // The useEffect will handle navigation when user state updates
       
     } catch (error: any) {
       console.error("Login error:", error)
       addToast(error.message || "Sign in failed. Please try again.", "error")
+      isLoggingIn.current = false // Reset on error
     } finally {
-      // IMPORTANT: Always reset loading state
       setIsLoading(false)
     }
   }

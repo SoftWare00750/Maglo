@@ -2,9 +2,8 @@
 
 import { useMaglo } from "@/lib/context"
 import { useParams, useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useToast } from "@/lib/toast"
-import { useEffect } from "react"
 import Sidebar from "@/components/ui/sidebar"
 import TopBar from "@/components/ui/top-bar"
 import Image from "next/image"
@@ -13,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ToastContainer } from "@/components/toasts/toast-container"
-import { MoreVertical, Eye, Download, Plus, Trash2 } from "lucide-react"
+import { MoreVertical, Eye, Download, Plus, Trash2, Calendar } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 
 export default function InvoiceDetailPage() {
@@ -24,16 +23,49 @@ export default function InvoiceDetailPage() {
   const invoiceId = Array.isArray(params.id) ? params.id[0] : params.id ?? ""
   const invoice = getInvoiceById(invoiceId)
   const [showAddItem, setShowAddItem] = useState(false)
-
-
+  const [isNewInvoice, setIsNewInvoice] = useState(true)
+  const [showDiscountInput, setShowDiscountInput] = useState(false)
+  const [showTaxInput, setShowTaxInput] = useState(false)
+  const [discount, setDiscount] = useState(0)
+  const [tax, setTax] = useState(0)
+  const [showIssuedDatePicker, setShowIssuedDatePicker] = useState(false)
+  const [showDueDatePicker, setShowDueDatePicker] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
 
   useEffect(() => {
     if (invoice) {
       document.title = `Invoice ${invoice.invoiceNumber} - Maglo`
+      
+      // Check if invoice was created in the last 30 minutes
+      const now = new Date().getTime()
+      const invoiceDate = new Date(invoice.issuedDate).getTime()
+      const thirtyMinutes = 30 * 60 * 1000
+      
+      if (now - invoiceDate < thirtyMinutes) {
+        setIsNewInvoice(true)
+        // Set timeout to revert after 30 minutes
+        const timeRemaining = thirtyMinutes - (now - invoiceDate)
+        setTimeout(() => {
+          setIsNewInvoice(false)
+        }, timeRemaining)
+      } else {
+        setIsNewInvoice(false)
+      }
     } else {
       document.title = "Invoice Details - Maglo"
     }
   }, [invoice])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownOpen) {
+        setDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [dropdownOpen])
   
   if (!invoice) {
     return (
@@ -66,18 +98,51 @@ export default function InvoiceDetailPage() {
     addToast(`Invoice sent to ${invoice.clientEmail}`, "success")
   }
 
+  const handleDateChange = (field: 'issuedDate' | 'dueDate', value: string) => {
+    updateInvoice(invoice.id, { [field]: value })
+    addToast("Date updated successfully", "success")
+    setShowIssuedDatePicker(false)
+    setShowDueDatePicker(false)
+  }
+
+  const handleAddDiscount = () => {
+    if (discount > 0) {
+      addToast(`Discount of ₦${discount.toFixed(2)} applied`, "success")
+      setShowDiscountInput(false)
+    }
+  }
+
+  const handleAddTax = () => {
+    if (tax > 0) {
+      addToast(`Tax of ₦${tax.toFixed(2)} applied`, "success")
+      setShowTaxInput(false)
+    }
+  }
+
+  const calculateTotal = () => {
+    const subtotal = invoice.amount
+    const finalTotal = subtotal - discount + tax
+    return finalTotal
+  }
+
+  const pageTitle = isNewInvoice 
+    ? `New Invoice: ${invoice.invoiceNumber}` 
+    : `Invoice: ${invoice.invoiceNumber}`
+
   return (
     <>
       <div className="min-h-screen bg-gray-50">
         <Sidebar />
         <div className="ml-56">
-          <TopBar title={`Invoice: ${invoice.invoiceNumber}`} />
+          <TopBar title={pageTitle} />
           <main className="p-8">
             {/* Three Dots Menu - Top Right */}
             <div className="flex items-center justify-end mb-8">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="p-2 hover:bg-secondary rounded transition-colors">
+                  <button 
+                    className="p-2 hover:bg-secondary rounded transition-colors"
+                  >
                     <MoreVertical size={20} className="text-muted-foreground" />
                   </button>
                 </DropdownMenuTrigger>
@@ -99,17 +164,13 @@ export default function InvoiceDetailPage() {
                 <Card className="bg-gray-800 text-white p-6 rounded-lg">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-3">
-                      {/* Logo Placeholder */}
-                        <Image
-            src="/logo2.png"
-            alt="Maglo Logo"
-            width={32}
-            height={32}
-            className="rounded"
-          />
-            
-          
-                    
+                      <Image
+                        src="/logo2.png"
+                        alt="Maglo Logo"
+                        width={32}
+                        height={32}
+                        className="rounded"
+                      />
                       <div>
                         <p className="text-2xl font-bold mb-1">Maglo</p>
                         <p className="text-sm text-gray-300">sales@maglo.com</p>
@@ -180,7 +241,7 @@ export default function InvoiceDetailPage() {
 
                   <button
                     onClick={() => setShowAddItem(!showAddItem)}
-                    className="text-primary font-medium text-sm hover:underline flex items-center gap-1 mb-4"
+                    className="text-green-700 font-medium text-sm hover:underline flex items-center gap-1 mb-4"
                   >
                     <Plus size={16} />
                     Add Item
@@ -192,17 +253,75 @@ export default function InvoiceDetailPage() {
                       <span className="text-muted-foreground">Subtotal</span>
                       <span className="font-medium text-foreground">₦{invoice.amount.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Discount</span>
-                      <button className="text-primary font-medium text-sm">Add</button>
+                      {!showDiscountInput ? (
+                        <button 
+                          onClick={() => setShowDiscountInput(true)}
+                          className="text-green-700 font-medium text-sm hover:underline"
+                        >
+                          Add
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            value={discount}
+                            onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+                            className="w-24 px-2 py-1 border rounded text-sm"
+                            placeholder="0.00"
+                          />
+                          <button 
+                            onClick={handleAddDiscount}
+                            className="text-green-700 font-medium text-sm hover:underline"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex justify-between">
+                    {discount > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground"></span>
+                        <span className="font-medium text-red-600">-₦{discount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Tax</span>
-                      <button className="text-primary font-medium text-sm">Add</button>
+                      {!showTaxInput ? (
+                        <button 
+                          onClick={() => setShowTaxInput(true)}
+                          className="text-green-700 font-medium text-sm hover:underline"
+                        >
+                          Add
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            value={tax}
+                            onChange={(e) => setTax(parseFloat(e.target.value) || 0)}
+                            className="w-24 px-2 py-1 border rounded text-sm"
+                            placeholder="0.00"
+                          />
+                          <button 
+                            onClick={handleAddTax}
+                            className="text-green-700 font-medium text-sm hover:underline"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      )}
                     </div>
+                    {tax > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground"></span>
+                        <span className="font-medium text-green-600">+₦{tax.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between border-t border-border pt-3 mt-3">
                       <span className="font-semibold text-foreground">Total</span>
-                      <span className="font-bold text-lg text-foreground">₦{invoice.total.toFixed(2)}</span>
+                      <span className="font-bold text-lg text-foreground">₦{calculateTotal().toFixed(2)}</span>
                     </div>
                   </div>
                 </Card>
@@ -226,20 +345,18 @@ export default function InvoiceDetailPage() {
                     <div>
                       <p className="font-medium text-foreground">{invoice.clientName}</p>
                       <p className="text-xs text-muted-foreground">{invoice.clientEmail}</p>
+
+                      {invoice.clientAddress && (
+  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+    ✓ {invoice.clientAddress}
+  </p>
+)}
                     </div>
                   </div>
 
-                  <div className="space-y-3 mb-6">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">UIHUT Agency LTD</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        ✓ 3471 Rainy Day Drive Tulsa, USA
-                      </p>
-                    </div>
-                    <Button className="w-full text-primary font-medium text-sm border border-primary bg-transparent hover:bg-primary/10">
-                      Add Customer
-                    </Button>
-                  </div>
+                  <Button className="w-full text-green-900 font-medium text-sm border border-green-700 ">
+                    Add Customer
+                  </Button>
                 </Card>
 
                 {/* Basic Info */}
@@ -248,11 +365,43 @@ export default function InvoiceDetailPage() {
                   <div className="space-y-4">
                     <div>
                       <label className="text-xs font-semibold text-muted-foreground block mb-1">Invoice Date</label>
-                      <p className="text-sm text-foreground font-medium">{invoice.issuedDate}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-foreground font-medium">{invoice.issuedDate}</p>
+                        <button 
+                          onClick={() => setShowIssuedDatePicker(!showIssuedDatePicker)}
+                          className="p-1 hover:bg-secondary rounded"
+                        >
+                          <Calendar size={16} className="text-muted-foreground" />
+                        </button>
+                      </div>
+                      {showIssuedDatePicker && (
+                        <input
+                          type="date"
+                          defaultValue={invoice.issuedDate}
+                          onChange={(e) => handleDateChange('issuedDate', e.target.value)}
+                          className="mt-2 w-full px-3 py-2 border rounded text-sm"
+                        />
+                      )}
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-muted-foreground block mb-1">Due Date</label>
-                      <p className="text-sm text-foreground font-medium">{invoice.dueDate}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-foreground font-medium">{invoice.dueDate}</p>
+                        <button 
+                          onClick={() => setShowDueDatePicker(!showDueDatePicker)}
+                          className="p-1 hover:bg-secondary rounded"
+                        >
+                          <Calendar size={16} className="text-muted-foreground" />
+                        </button>
+                      </div>
+                      {showDueDatePicker && (
+                        <input
+                          type="date"
+                          defaultValue={invoice.dueDate}
+                          onChange={(e) => handleDateChange('dueDate', e.target.value)}
+                          className="mt-2 w-full px-3 py-2 border rounded text-sm"
+                        />
+                      )}
                     </div>
                   </div>
                 </Card>
@@ -291,11 +440,17 @@ export default function InvoiceDetailPage() {
                   </Button>
 
                   <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1 flex items-center justify-center gap-2 bg-transparent">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 flex items-center justify-center gap-2 bg-transparent text-green-700 border-green-700 hover:bg-transparent hover:border-green-700"
+                    >
                       <Eye size={16} />
                       Preview
                     </Button>
-                    <Button variant="outline" className="flex-1 flex items-center justify-center gap-2 bg-transparent">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 flex items-center justify-center gap-2 bg-transparent text-green-700 border-green-700 hover:bg-transparent hover:border-green-700"
+                    >
                       <Download size={16} />
                       Download
                     </Button>

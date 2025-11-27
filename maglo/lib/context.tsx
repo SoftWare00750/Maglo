@@ -9,6 +9,7 @@ export interface Invoice {
   clientName: string
   clientEmail: string
   clientAvatar?: string
+  clientAddress?: string 
   amount: number
   vat: number
   vatAmount: number
