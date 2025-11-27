@@ -1,5 +1,3 @@
-
-
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
@@ -63,10 +61,12 @@ export function MagloProvider({ children }: { children: ReactNode }) {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
+  // Check authentication on mount
   useEffect(() => {
     checkAuth()
   }, [])
 
+  // Fetch invoices when user changes
   useEffect(() => {
     if (user) {
       fetchInvoices()
@@ -78,13 +78,18 @@ export function MagloProvider({ children }: { children: ReactNode }) {
   const checkAuth = async () => {
     try {
       const session = await account.get()
-      setUser({
+      console.log('✅ Active session found:', session.$id)
+      
+      const authenticatedUser = {
         id: session.$id,
         name: session.name,
         email: session.email,
         avatar: session.name.substring(0, 2).toUpperCase(),
-      })
+      }
+      
+      setUser(authenticatedUser)
     } catch (error) {
+      console.log('ℹ️ No active session')
       setUser(null)
     } finally {
       setIsLoading(false)
@@ -93,68 +98,106 @@ export function MagloProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      // FIXED: Delete any existing sessions first
+      // Clean up any existing sessions
+      console.log('🔐 Initiating login...')
       try {
-        await account.deleteSession("current")
+        const sessions = await account.listSessions()
+        if (sessions.sessions.length > 0) {
+          console.log('🧹 Cleaning up', sessions.sessions.length, 'existing session(s)')
+          for (const session of sessions.sessions) {
+            await account.deleteSession(session.$id)
+          }
+        }
       } catch (error) {
-        // Ignore if no session exists
-        console.log("No existing session to delete")
+        console.log('ℹ️ No existing sessions to clean')
       }
 
-      // Now create new session
-      await account.createEmailPasswordSession(email, password)
+      // Create new session
+      console.log('🔑 Creating session for:', email)
+      const session = await account.createEmailPasswordSession(email, password)
+      console.log('✅ Session created:', session.$id)
       
-      // Get user data and update state immediately
-      const session = await account.get()
-      setUser({
-        id: session.$id,
-        name: session.name,
-        email: session.email,
-        avatar: session.name.substring(0, 2).toUpperCase(),
-      })
+      // Get user data
+      const userData = await account.get()
+      console.log('✅ User data retrieved:', userData.$id)
+      
+      const authenticatedUser = {
+        id: userData.$id,
+        name: userData.name,
+        email: userData.email,
+        avatar: userData.name.substring(0, 2).toUpperCase(),
+      }
+      
+      // Update user state - this will trigger useEffect in sign-in form
+      setUser(authenticatedUser)
+      console.log('✅ User state updated:', authenticatedUser.email)
+      
+      // Return successfully - no delay needed here
+      return Promise.resolve()
+      
     } catch (error: any) {
-      console.error("Login error:", error)
+      console.error('❌ Login error:', error)
       throw new Error(error.message || "Login failed")
     }
   }
 
   const signup = async (name: string, email: string, password: string) => {
     try {
-      // FIXED: Delete any existing sessions first
+      console.log('📝 Initiating signup...')
+      
+      // Clean up any existing sessions
       try {
-        await account.deleteSession("current")
+        const sessions = await account.listSessions()
+        if (sessions.sessions.length > 0) {
+          console.log('🧹 Cleaning up existing sessions')
+          for (const session of sessions.sessions) {
+            await account.deleteSession(session.$id)
+          }
+        }
       } catch (error) {
-        // Ignore if no session exists
-        console.log("No existing session to delete")
+        console.log('ℹ️ No existing sessions')
       }
 
-      // Create new account
+      // Create account
+      console.log('🆕 Creating account for:', email)
       await account.create(ID.unique(), email, password, name)
+      console.log('✅ Account created')
       
-      // Login with new account
-      await account.createEmailPasswordSession(email, password)
+      // Auto-login
+      console.log('🔐 Logging in new user...')
+      const session = await account.createEmailPasswordSession(email, password)
+      console.log('✅ Session created:', session.$id)
       
-      // Get user data and update state immediately
-      const session = await account.get()
-      setUser({
-        id: session.$id,
-        name: session.name,
-        email: session.email,
-        avatar: session.name.substring(0, 2).toUpperCase(),
-      })
+      // Get user data
+      const userData = await account.get()
+      const authenticatedUser = {
+        id: userData.$id,
+        name: userData.name,
+        email: userData.email,
+        avatar: userData.name.substring(0, 2).toUpperCase(),
+      }
+      
+      // Update user state
+      setUser(authenticatedUser)
+      console.log('✅ User registered and logged in:', authenticatedUser.email)
+      
+      return Promise.resolve()
+      
     } catch (error: any) {
-      console.error("Signup error:", error)
+      console.error('❌ Signup error:', error)
       throw new Error(error.message || "Signup failed")
     }
   }
 
   const logout = async () => {
     try {
+      console.log('🚪 Logging out...')
       await account.deleteSession("current")
       setUser(null)
       setInvoices([])
+      console.log('✅ Logged out successfully')
     } catch (error: any) {
-      console.error("Logout error:", error)
+      console.error('❌ Logout error:', error)
       throw new Error(error.message || "Logout failed")
     }
   }
@@ -163,6 +206,8 @@ export function MagloProvider({ children }: { children: ReactNode }) {
     if (!user) return
 
     try {
+      console.log('📄 Fetching invoices for user:', user.id)
+      
       const response = await databases.listDocuments(
         DATABASE_ID,
         INVOICES_COLLECTION_ID,
@@ -186,8 +231,9 @@ export function MagloProvider({ children }: { children: ReactNode }) {
       }))
 
       setInvoices(fetchedInvoices)
+      console.log('✅ Loaded', fetchedInvoices.length, 'invoice(s)')
     } catch (error) {
-      console.error("Failed to fetch invoices:", error)
+      console.error('❌ Failed to fetch invoices:', error)
     }
   }
 
@@ -195,6 +241,8 @@ export function MagloProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error("User not authenticated")
 
     try {
+      console.log('➕ Creating invoice:', invoice.invoiceNumber)
+      
       const docData = {
         ...invoice,
         userId: user.id,
@@ -214,8 +262,9 @@ export function MagloProvider({ children }: { children: ReactNode }) {
       }
 
       setInvoices([newInvoice, ...invoices])
+      console.log('✅ Invoice created:', newInvoice.invoiceNumber)
     } catch (error: any) {
-      console.error("Add invoice error:", error)
+      console.error('❌ Add invoice error:', error)
       throw new Error(error.message || "Failed to create invoice")
     }
   }
@@ -224,6 +273,8 @@ export function MagloProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error("User not authenticated")
 
     try {
+      console.log('✏️ Updating invoice:', id)
+      
       const updateData: any = { ...updates }
       if (updates.items) {
         updateData.items = JSON.stringify(updates.items)
@@ -241,8 +292,9 @@ export function MagloProvider({ children }: { children: ReactNode }) {
           inv.id === id ? { ...inv, ...updates } : inv
         )
       )
+      console.log('✅ Invoice updated')
     } catch (error: any) {
-      console.error("Update invoice error:", error)
+      console.error('❌ Update invoice error:', error)
       throw new Error(error.message || "Failed to update invoice")
     }
   }
@@ -251,6 +303,8 @@ export function MagloProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error("User not authenticated")
 
     try {
+      console.log('🗑️ Deleting invoice:', id)
+      
       await databases.deleteDocument(
         DATABASE_ID,
         INVOICES_COLLECTION_ID,
@@ -258,8 +312,9 @@ export function MagloProvider({ children }: { children: ReactNode }) {
       )
 
       setInvoices(invoices.filter((inv) => inv.id !== id))
+      console.log('✅ Invoice deleted')
     } catch (error: any) {
-      console.error("Delete invoice error:", error)
+      console.error('❌ Delete invoice error:', error)
       throw new Error(error.message || "Failed to delete invoice")
     }
   }

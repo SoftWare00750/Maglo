@@ -21,13 +21,19 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const router = useRouter()
-  const { signup } = useMaglo()
+  const { signup, user } = useMaglo()
   const { toasts, addToast, removeToast } = useToast()
 
   useEffect(() => {
-    document.title = "Sign In - Maglo"
+    document.title = "Sign Up - Maglo"
   }, [])
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user && !isLoading) {
+      router.push("/dashboard")
+    }
+  }, [user, router])
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -65,12 +71,21 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
     setIsLoading(true)
 
     try {
+      // Signup - this will create account, login, and set user state
       await signup(fullName, email, password)
-      addToast("Account successfully created.", "success")
-      setTimeout(() => router.push("/sign-in-form"), 500)
+      
+      // Show success message
+      addToast("Account successfully created!", "success")
+      
+      // Navigate to dashboard
+      router.push("/dashboard")
+      router.refresh()
+      
     } catch (error: any) {
+      console.error("Signup error:", error)
       addToast(error.message || "Sign up failed. Please try again.", "error")
     } finally {
+      // IMPORTANT: Always reset loading state
       setIsLoading(false)
     }
   }
@@ -179,12 +194,11 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
                       Sign in
                     </button>
 
-                     <img 
-    src="/curve1.png" 
-    alt="Description" 
-    className="ml-72"
-   
-  />
+                    <img 
+                      src="/curve1.png" 
+                      alt="Decorative curve" 
+                      className="ml-72"
+                    />
                   </span>
                 </div>
               </form>

@@ -22,13 +22,19 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const router = useRouter()
-  const { login } = useMaglo()
+  const { login, user } = useMaglo()
   const { toasts, addToast, removeToast } = useToast()
-
 
   useEffect(() => {
     document.title = "Sign In - Maglo"
   }, [])
+
+  // Redirect if already logged in (but don't interfere with login flow)
+  useEffect(() => {
+    if (user && !isLoading) {
+      router.push("/dashboard")
+    }
+  }, [user, router]) // Removed isLoading from deps to avoid interference
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -60,20 +66,23 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
     setIsLoading(true)
 
     try {
-      // Login and get user data
+      // Login - this will set user state in context
       await login(email, password)
       
       // Show success message
       const userName = email.split('@')[0]
       addToast(`Welcome back, ${userName}!`, "success")
       
-      // Wait a bit for the cookie to be set, then do a hard navigation
-      setTimeout(() => {
-        window.location.href = "/dashboard"
-      }, 500)
+      // User state is now set, the useEffect will handle navigation
+      // But we also explicitly navigate to ensure it happens
+      router.push("/dashboard")
+      router.refresh()
       
     } catch (error: any) {
+      console.error("Login error:", error)
       addToast(error.message || "Sign in failed. Please try again.", "error")
+    } finally {
+      // IMPORTANT: Always reset loading state
       setIsLoading(false)
     }
   }
@@ -180,13 +189,11 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
                     >
                       Sign up for free
                     </button>
-                    {/* Decorative Image */}
-                
-                  <img 
-                    src="/curve2.png" 
-                    alt="Decorative curve" 
-                    className="ml-64"
-                  />
+                    <img 
+                      src="/curve2.png" 
+                      alt="Decorative curve" 
+                      className="ml-64"
+                    />
                   </span>
                 </div>
               </form>
