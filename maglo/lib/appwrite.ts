@@ -9,8 +9,8 @@ client
 export const account = new Account(client);
 export const databases = new Databases(client);
 
-export const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '';
-export const INVOICES_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_INVOICES_COLLECTION_ID || '';
+export const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '6925f91b000dc1b43405';
+export const INVOICES_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_INVOICES_COLLECTION_ID || 'invoices';
 export const USERS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_USERS_COLLECTION_ID || '';
 
 export { ID };
