@@ -1,10 +1,10 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useMaglo } from "@/lib/context"
@@ -21,19 +21,27 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const isLoggingIn = useRef(false) // Track active login attempt
   const router = useRouter()
-  const { login, user } = useMaglo()
+  const { login, user, isLoading: authLoading } = useMaglo()
   const { toasts, addToast, removeToast } = useToast()
 
   useEffect(() => {
     document.title = "Sign In - Maglo"
   }, [])
 
+  // Only redirect if user exists AND we're in the process of logging in
   useEffect(() => {
-    if (user && !isLoading) {
-      router.push("/dashboard")
+    if (user && isLoggingIn.current && !authLoading) {
+      console.log('🔄 Redirecting to dashboard after login')
+      // Increased delay to let toast show
+      setTimeout(() => {
+        router.push("/dashboard")
+        router.refresh()
+        isLoggingIn.current = false
+      }, 500) // 2 seconds to see the toast
     }
-  }, [user, router])
+  }, [user, authLoading, router])
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -63,16 +71,23 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
     }
 
     setIsLoading(true)
+    isLoggingIn.current = true // Mark that we're actively logging in
 
     try {
+      // Login - this will set user state in context
       await login(email, password)
+      
+      // Show success message - extract name from email
       const userName = email.split('@')[0]
-      addToast(`Welcome back, ${userName}!`, "success")
-      router.push("/dashboard")
-      router.refresh()
+      const capitalizedName = userName.charAt(0).toUpperCase() + userName.slice(1)
+      addToast(`Welcome back, ${capitalizedName}!`, "success")
+      
+      // The useEffect will handle navigation when user state updates
+      
     } catch (error: any) {
       console.error("Login error:", error)
       addToast(error.message || "Sign in failed. Please try again.", "error")
+      isLoggingIn.current = false // Reset on error
     } finally {
       setIsLoading(false)
     }
@@ -80,20 +95,20 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
 
   return (
     <>
-      <div className="flex min-h-screen flex-col lg:flex-row">
+      <div className="flex h-screen">
         {/* Left side - Form */}
-        <div className="w-full lg:w-1/2 flex flex-col px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+        <div className="w-full lg:w-1/2 flex flex-col px-6 py-8 lg:py-12">
           {/* Logo */}
-          <div className="mb-8 lg:mb-16">
+          <div className="mb-12 lg:mb-16">
             <div className="flex items-center gap-2">
               <Image
                 src="/logo.png"
                 alt="Maglo Logo"
-                width={28}
-                height={28}
-                className="rounded sm:w-8 sm:h-8"
+                width={32}
+                height={32}
+                className="rounded"
               />
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Maglo.</h1>
+              <h1 className="text-2xl font-bold text-foreground">Maglo.</h1>
             </div>
           </div>
 
@@ -101,13 +116,13 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
           <div className="flex-1 flex items-center justify-center">
             <div className="w-full max-w-md">
               {/* Form Header */}
-              <div className="mb-6 sm:mb-8">
-                <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Welcome back</h2>
+              <div className="mb-8">
+                <h2 className="text-3xl font-bold text-foreground mb-2">Welcome back</h2>
                 <p className="text-muted-foreground text-sm">Welcome back! Please enter your details</p>
               </div>
 
               {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Email */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">Email</label>
@@ -119,7 +134,7 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
                       setEmail(e.target.value)
                       if (errors.email) setErrors({ ...errors, email: "" })
                     }}
-                    className={`h-10 sm:h-12 ${errors.email ? "border-red-500" : ""}`}
+                    className={errors.email ? "border-red-500" : ""}
                     disabled={isLoading}
                   />
                   {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
@@ -136,14 +151,14 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
                       setPassword(e.target.value)
                       if (errors.password) setErrors({ ...errors, password: "" })
                     }}
-                    className={`h-10 sm:h-12 ${errors.password ? "border-red-500" : ""}`}
+                    className={errors.password ? "border-red-500" : ""}
                     disabled={isLoading}
                   />
                   {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
                 </div>
 
                 {/* Remember & Forgot */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                <div className="flex items-center justify-between">
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -163,7 +178,7 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 sm:h-12 rounded-lg font-medium"
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 py-2 rounded-lg font-medium"
                 >
                   {isLoading ? "Signing in..." : "Sign in"}
                 </Button>
@@ -180,6 +195,11 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
                     >
                       Sign up for free
                     </button>
+                    <img 
+                      src="/curve2.png" 
+                      alt="Decorative curve" 
+                      className="ml-64"
+                    />
                   </span>
                 </div>
               </form>
@@ -187,7 +207,7 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
           </div>
         </div>
 
-        {/* Right side - Image (Hidden on mobile) */}
+        {/* Right side - Image */}
         <div className="hidden lg:flex w-1/2 bg-gradient-to-b from-gray-100 to-gray-200 items-center justify-center relative">
           <Image
             src="/decorate.png"
