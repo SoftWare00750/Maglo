@@ -28,7 +28,6 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
     document.title = "Sign Up - Maglo"
   }, [])
 
-  // Redirect if already logged in
   useEffect(() => {
     if (user && !isLoading) {
       router.push("/dashboard")
@@ -71,41 +70,34 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
     setIsLoading(true)
 
     try {
-      // Signup - this will create account, login, and set user state
       await signup(fullName, email, password)
-      
-      // Show success message
       addToast("Account successfully created!", "success")
-      
-      // Navigate to dashboard
       router.push("/dashboard")
       router.refresh()
-      
     } catch (error: any) {
       console.error("Signup error:", error)
       addToast(error.message || "Sign up failed. Please try again.", "error")
     } finally {
-      // IMPORTANT: Always reset loading state
       setIsLoading(false)
     }
   }
 
   return (
     <>
-      <div className="flex h-screen">
+      <div className="flex min-h-screen flex-col lg:flex-row">
         {/* Left side - Form */}
-        <div className="w-full lg:w-1/2 flex flex-col px-6 py-8 lg:py-12">
+        <div className="w-full lg:w-1/2 flex flex-col px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
           {/* Logo */}
-          <div className="mb-12 lg:mb-16">
+          <div className="mb-8 lg:mb-16">
             <div className="flex items-center gap-2">
               <Image
                 src="/logo.png"
                 alt="Maglo Logo"
-                width={32}
-                height={32}
-                className="rounded"
+                width={28}
+                height={28}
+                className="rounded sm:w-8 sm:h-8"
               />
-              <h1 className="text-2xl font-bold text-foreground">Maglo.</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Maglo.</h1>
             </div>
           </div>
 
@@ -113,13 +105,13 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
           <div className="flex-1 flex items-center justify-center">
             <div className="w-full max-w-md">
               {/* Form Header */}
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-foreground mb-2">Create new account</h2>
+              <div className="mb-6 sm:mb-8">
+                <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Create new account</h2>
                 <p className="text-muted-foreground text-sm">Welcome! Please enter your details to get started</p>
               </div>
 
               {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                 {/* Full Name */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">Full Name</label>
@@ -131,7 +123,7 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
                       setFullName(e.target.value)
                       if (errors.fullName) setErrors({ ...errors, fullName: "" })
                     }}
-                    className={errors.fullName ? "border-red-500" : ""}
+                    className={`h-10 sm:h-12 ${errors.fullName ? "border-red-500" : ""}`}
                     disabled={isLoading}
                   />
                   {errors.fullName && <p className="text-xs text-red-500">{errors.fullName}</p>}
@@ -148,7 +140,7 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
                       setEmail(e.target.value)
                       if (errors.email) setErrors({ ...errors, email: "" })
                     }}
-                    className={errors.email ? "border-red-500" : ""}
+                    className={`h-10 sm:h-12 ${errors.email ? "border-red-500" : ""}`}
                     disabled={isLoading}
                   />
                   {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
@@ -165,7 +157,7 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
                       setPassword(e.target.value)
                       if (errors.password) setErrors({ ...errors, password: "" })
                     }}
-                    className={errors.password ? "border-red-500" : ""}
+                    className={`h-10 sm:h-12 ${errors.password ? "border-red-500" : ""}`}
                     disabled={isLoading}
                   />
                   {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
@@ -176,7 +168,7 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 py-2 rounded-lg font-medium"
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 sm:h-12 rounded-lg font-medium"
                 >
                   {isLoading ? "Creating Account..." : "Create Account"}
                 </Button>
@@ -193,12 +185,6 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
                     >
                       Sign in
                     </button>
-
-                    <img 
-                      src="/curve1.png" 
-                      alt="Decorative curve" 
-                      className="ml-72"
-                    />
                   </span>
                 </div>
               </form>
@@ -206,7 +192,7 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
           </div>
         </div>
 
-        {/* Right side - Image */}
+        {/* Right side - Image (Hidden on mobile) */}
         <div className="hidden lg:flex w-1/2 bg-gradient-to-b from-gray-100 to-gray-200 items-center justify-center relative">
           <Image
             src="/decorate.png"
