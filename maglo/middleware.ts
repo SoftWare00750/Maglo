@@ -5,52 +5,52 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
   const hostname = request.nextUrl.hostname
 
-  // Public paths that don't require authentication
   const isPublicPath = path === '/'
 
-  // Check if running on localhost or Vercel
+  // Localhost checks
   const isLocalhost = hostname === 'localhost' || 
                       hostname === '127.0.0.1' || 
                       hostname.includes('192.168')
 
-  // ⭐ FIXED: Correct hostname format (no protocol or trailing slash)
-  const allowedProductionHostnames = [
-    "maglo-three.vercel.app",
-    "www.maglo-three.vercel.app"
+  // ⭐ Add your production hostname(s)
+  const allowedHostnames = [
+    "maglo-three.vercel.app"
   ]
 
-  // Skip middleware for unknown hostnames in production
-  if (!isLocalhost && !allowedProductionHostnames.includes(hostname)) {
-    console.log("⚠️ Unknown hostname:", hostname)
+  // Skip middleware if hostname is not recognized
+  if (!isLocalhost && !allowedHostnames.includes(hostname)) {
+    console.log("⛔ Skipping middleware for unknown hostname:", hostname)
     return NextResponse.next()
   }
 
-  // Get Appwrite session cookies
+  // Appwrite session cookie checks
   const cookies = request.cookies.getAll()
   const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || '6925f7e8003628848504'
 
-  const hasSession = cookies.some(cookie => 
+  // Check for valid session cookies
+  const sessionCookie = cookies.find(cookie => 
     cookie.name === `a_session_${projectId}` ||
-    cookie.name === `a_session_${projectId}_legacy` ||
-    cookie.name.startsWith('a_session_')
+    cookie.name === `a_session_${projectId}_legacy`
   )
+
+  // Session is valid only if cookie exists AND has a value
+  const hasSession = sessionCookie && sessionCookie.value && sessionCookie.value.length > 0
 
   console.log('🌐 Middleware check:', { 
     hostname, 
     path, 
     hasSession,
-    isPublicPath 
+    cookieName: sessionCookie?.name,
+    cookieValue: sessionCookie?.value ? 'exists' : 'empty'
   })
 
-  // Redirect authenticated users away from login page
   if (isPublicPath && hasSession) {
-    console.log('✅ Authenticated user on login page, redirecting to dashboard')
+    console.log('✅ Has session on public path, redirecting to dashboard')
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // Redirect unauthenticated users to login
   if (!isPublicPath && !hasSession) {
-    console.log('🔒 Unauthenticated user on protected page, redirecting to login')
+    console.log('🔒 No session on protected path, redirecting to login')
     return NextResponse.redirect(new URL('/', request.url))
   }
 
