@@ -191,18 +191,26 @@ export function MagloProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
-    try {
-      console.log('🚪 Logging out...')
-      await account.deleteSession("current")
-      setUser(null)
-      setInvoices([])
-      console.log('✅ Logged out successfully')
-    } catch (error: any) {
-      console.error('❌ Logout error:', error)
-      throw new Error(error.message || "Logout failed")
-    }
+  try {
+    console.log('🚪 Logging out...')
+    await account.deleteSession("current")
+    
+    // Clear all Appwrite cookies explicitly
+    document.cookie.split(";").forEach((c) => {
+      const cookieName = c.trim().split("=")[0]
+      if (cookieName.startsWith('a_session_')) {
+        document.cookie = cookieName + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/;'
+      }
+    })
+    
+    setUser(null)
+    setInvoices([])
+    console.log('✅ Logged out successfully')
+  } catch (error: any) {
+    console.error('❌ Logout error:', error)
+    throw new Error(error.message || "Logout failed")
   }
-
+}
   const fetchInvoices = async () => {
     if (!user) return
 
