@@ -14,6 +14,7 @@ export async function middleware(request: NextRequest) {
 
   // ⭐ Add your production hostname(s)
   const allowedHostnames = [
+    "https://maglo-three.vercel.app/",
     "maglo-three.vercel.app"
   ]
 
@@ -27,30 +28,19 @@ export async function middleware(request: NextRequest) {
   const cookies = request.cookies.getAll()
   const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || '6925f7e8003628848504'
 
-  // Check for valid session cookies
-  const sessionCookie = cookies.find(cookie => 
+  const hasSession = cookies.some(cookie => 
     cookie.name === `a_session_${projectId}` ||
-    cookie.name === `a_session_${projectId}_legacy`
+    cookie.name === `a_session_${projectId}_legacy` ||
+    cookie.name.startsWith('a_session_')
   )
 
-  // Session is valid only if cookie exists AND has a value
-  const hasSession = sessionCookie && sessionCookie.value && sessionCookie.value.length > 0
-
-  console.log('🌐 Middleware check:', { 
-    hostname, 
-    path, 
-    hasSession,
-    cookieName: sessionCookie?.name,
-    cookieValue: sessionCookie?.value ? 'exists' : 'empty'
-  })
+  console.log('🌐 Host check:', { hostname, path, hasSession })
 
   if (isPublicPath && hasSession) {
-    console.log('✅ Has session on public path, redirecting to dashboard')
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   if (!isPublicPath && !hasSession) {
-    console.log('🔒 No session on protected path, redirecting to login')
     return NextResponse.redirect(new URL('/', request.url))
   }
 
