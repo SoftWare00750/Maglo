@@ -19,21 +19,26 @@ export async function middleware(request: NextRequest) {
 
   console.log('🔒 Middleware:', { 
     path, 
-    hasSession, 
-    hostname: request.nextUrl.hostname 
+    hasSession,
+    isPublicPath,
+    cookieNames: cookies.map(c => c.name)
   })
 
-  // Redirect logic
+  // FIXED: Prevent redirect loops
+  // Only redirect if we're NOT already on the target page
   if (isPublicPath && hasSession) {
-    console.log('✅ Has session, redirecting to dashboard')
+    // User has session but is on login page - redirect to dashboard
+    console.log('✅ Redirecting authenticated user from / to /dashboard')
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   if (!isPublicPath && !hasSession) {
-    console.log('🔒 No session, redirecting to login')
+    // User has no session but trying to access protected route - redirect to login
+    console.log('🔒 Redirecting unauthenticated user from', path, 'to /')
     return NextResponse.redirect(new URL('/', request.url))
   }
 
+  // All checks passed - allow request
   return NextResponse.next()
 }
 

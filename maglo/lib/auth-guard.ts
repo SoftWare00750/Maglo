@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useMaglo } from "@/lib/context"
 
@@ -11,11 +11,13 @@ import { useMaglo } from "@/lib/context"
 export function useAuthGuard() {
   const { user, isLoading } = useMaglo()
   const router = useRouter()
+  const hasRedirected = useRef(false)
 
   useEffect(() => {
-    // Only redirect after loading is complete and no user is found
-    if (!isLoading && !user) {
-      console.log('🔒 Auth guard: No user, redirecting to login')
+    // FIXED: Only redirect once loading is complete, user is null, and we haven't redirected yet
+    if (!isLoading && !user && !hasRedirected.current) {
+      console.log('🔒 Auth guard: No user found, redirecting to login')
+      hasRedirected.current = true
       router.push("/")
     }
   }, [user, isLoading, router])
@@ -30,11 +32,13 @@ export function useAuthGuard() {
 export function useRedirectIfAuthenticated() {
   const { user, isLoading } = useMaglo()
   const router = useRouter()
+  const hasRedirected = useRef(false)
 
   useEffect(() => {
-    // Redirect to dashboard if user is already logged in
-    if (!isLoading && user) {
+    // FIXED: Only redirect once loading is complete, user exists, and we haven't redirected yet
+    if (!isLoading && user && !hasRedirected.current) {
       console.log('✅ Already authenticated, redirecting to dashboard')
+      hasRedirected.current = true
       router.push("/dashboard")
     }
   }, [user, isLoading, router])

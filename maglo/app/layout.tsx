@@ -41,7 +41,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <MagloProvider>{children}</MagloProvider>
-        <Analytics />
+        {/*<Analytics />*/}
       </body>
     </html>
   )
