@@ -6,13 +6,7 @@ export async function middleware(request: NextRequest) {
   const isPublicPath = path === '/'
 
   // Get project ID from env
-  const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID
-  
-  // If no project ID, allow access (fail open for debugging)
-  if (!projectId) {
-    console.error('⚠️ Missing NEXT_PUBLIC_APPWRITE_PROJECT_ID')
-    return NextResponse.next()
-  }
+  const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || '6925f7e8003628848504'
 
   // Check for session cookies
   const cookies = request.cookies.getAll()
@@ -23,13 +17,20 @@ export async function middleware(request: NextRequest) {
 
   const hasSession = sessionCookie && sessionCookie.value && sessionCookie.value.length > 0
 
-  console.log('🔒 Middleware:', { path, hasSession, projectId })
+  console.log('🔒 Middleware:', { 
+    path, 
+    hasSession, 
+    hostname: request.nextUrl.hostname 
+  })
 
+  // Redirect logic
   if (isPublicPath && hasSession) {
+    console.log('✅ Has session, redirecting to dashboard')
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   if (!isPublicPath && !hasSession) {
+    console.log('🔒 No session, redirecting to login')
     return NextResponse.redirect(new URL('/', request.url))
   }
 
