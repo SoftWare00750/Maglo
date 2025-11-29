@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ToastContainer } from "@/components/toasts/toast-container"
-import { MoreVertical, Eye, Download, Plus, Trash2, Menu, X, ArrowLeft } from "lucide-react"
+import { MoreVertical, Eye, Download, Plus, Trash2, Menu, X, ArrowLeft, CheckCircle, Clock, XCircle } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 
 export default function InvoiceDetailPage() {
@@ -47,16 +47,26 @@ export default function InvoiceDetailPage() {
     )
   }
 
-  const handleStatusChange = (newStatus: "Paid" | "Unpaid" | "Pending") => {
-    updateInvoice(invoice.id, { status: newStatus })
-    addToast(`Invoice marked as ${newStatus}`, "success")
+  const handleStatusChange = async (newStatus: "Paid" | "Unpaid" | "Pending") => {
+    try {
+      await updateInvoice(invoice.id, { status: newStatus })
+      addToast(`Invoice marked as ${newStatus}`, "success")
+    } catch (error) {
+      console.error('Error updating invoice:', error)
+      addToast("Failed to update invoice status", "error")
+    }
   }
 
   const handleDelete = () => {
     if (confirm("Are you sure you want to delete this invoice?")) {
-      deleteInvoice(invoice.id)
-      addToast("Invoice deleted successfully", "success")
-      router.push("/invoices")
+      try {
+        deleteInvoice(invoice.id)
+        addToast("Invoice deleted successfully", "success")
+        router.push("/invoices")
+      } catch (error) {
+        console.error('Error deleting invoice:', error)
+        addToast("Failed to delete invoice", "error")
+      }
     }
   }
 
@@ -323,14 +333,38 @@ export default function InvoiceDetailPage() {
                     </Badge>
                   </div>
 
-                  {invoice.status !== "Paid" && (
-                    <Button
-                      onClick={() => handleStatusChange("Paid")}
-                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 sm:h-11"
-                    >
-                      Mark as Paid
-                    </Button>
-                  )}
+                  {/* Status Change Buttons */}
+                  <div className="space-y-2">
+                    {invoice.status !== "Paid" && (
+                      <Button
+                        onClick={() => handleStatusChange("Paid")}
+                        className="w-full bg-green-600 text-white hover:bg-green-700 h-10 sm:h-11 flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle size={16} />
+                        Mark as Paid
+                      </Button>
+                    )}
+                    
+                    {invoice.status !== "Pending" && (
+                      <Button
+                        onClick={() => handleStatusChange("Pending")}
+                        className="w-full bg-orange-600 text-white hover:bg-orange-700 h-10 sm:h-11 flex items-center justify-center gap-2"
+                      >
+                        <Clock size={16} />
+                        Mark as Pending
+                      </Button>
+                    )}
+                    
+                    {invoice.status !== "Unpaid" && (
+                      <Button
+                        onClick={() => handleStatusChange("Unpaid")}
+                        className="w-full bg-red-600 text-white hover:bg-red-700 h-10 sm:h-11 flex items-center justify-center gap-2"
+                      >
+                        <XCircle size={16} />
+                        Mark as Unpaid
+                      </Button>
+                    )}
+                  </div>
 
                   <Button
                     onClick={handleSendInvoice}

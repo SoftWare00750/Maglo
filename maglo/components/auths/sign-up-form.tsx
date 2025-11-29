@@ -21,19 +21,12 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const router = useRouter()
-  const { signup, user } = useMaglo()
+  const { logout } = useMaglo()
   const { toasts, addToast, removeToast } = useToast()
 
   useEffect(() => {
     document.title = "Sign Up - Maglo"
   }, [])
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user && !isLoading) {
-      router.push("/dashboard")
-    }
-  }, [user, router])
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -71,21 +64,39 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
     setIsLoading(true)
 
     try {
-      // Signup - this will create account, login, and set user state
-      await signup(fullName, email, password)
+      // Import account from appwrite
+      const { account, ID } = await import("@/lib/appwrite")
+      
+      // Clean up any existing sessions first
+      try {
+        const sessions = await account.listSessions()
+        if (sessions.sessions.length > 0) {
+          for (const session of sessions.sessions) {
+            await account.deleteSession(session.$id)
+          }
+        }
+      } catch (error) {
+        console.log('ℹ️ No existing sessions')
+      }
+
+      // Create account
+      console.log('📝 Creating account for:', email)
+      await account.create(ID.unique(), email, password, fullName)
+      console.log('✅ Account created successfully')
       
       // Show success message
-      addToast("Account successfully created!", "success")
+      addToast("Account created successfully! Please sign in.", "success")
       
-      // Navigate to dashboard
-      router.push("/dashboard")
-      router.refresh()
+      // Wait a moment for the toast to show
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
+      // Navigate to sign in page
+      onToggle()
       
     } catch (error: any) {
-      console.error("Signup error:", error)
+      console.error('❌ Signup error:', error)
       addToast(error.message || "Sign up failed. Please try again.", "error")
     } finally {
-      // IMPORTANT: Always reset loading state
       setIsLoading(false)
     }
   }
