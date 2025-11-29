@@ -2,6 +2,7 @@
 
 import type React from "react"
 
+
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useMaglo } from "@/lib/context"
@@ -28,7 +29,7 @@ export default function CreateInvoicePage() {
   const { toasts, addToast, removeToast } = useToast()
   const [clientName, setClientName] = useState("")
   const [clientEmail, setClientEmail] = useState("")
-  const [clientAddress, setClientAddress] = useState("")
+  const [amount, setAmount] = useState("")
   const [vat, setVat] = useState("5")
   const [dueDate, setDueDate] = useState("")
   const [issuedDate, setIssuedDate] = useState(new Date().toISOString().split("T")[0])
@@ -36,27 +37,29 @@ export default function CreateInvoicePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  useEffect(() => {
+
+   useEffect(() => {
     document.title = "Create Invoice - Maglo"
   }, [])
 
-  // Calculate subtotal from line items
-  const calculateSubtotal = () => {
-    return items.reduce((sum, item) => sum + item.amount, 0)
-  }
-
   const calculateVAT = () => {
-    const subtotal = calculateSubtotal()
+    const amountNum = Number.parseFloat(amount) || 0
     const vatPercent = Number.parseFloat(vat) || 0
-    return (subtotal * vatPercent) / 100
+    return (amountNum * vatPercent) / 100
   }
 
   const calculateTotal = () => {
-    return calculateSubtotal() + calculateVAT()
+    const amountNum = Number.parseFloat(amount) || 0
+    return amountNum + calculateVAT()
   }
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
+
+    useEffect(() => {
+    document.title = "Create Invoice - Maglo"
+  }, [])
+
 
     if (!clientName.trim()) {
       newErrors.clientName = "Client name is required"
@@ -68,14 +71,8 @@ export default function CreateInvoicePage() {
       newErrors.clientEmail = "Invalid email format"
     }
 
-    if (items.length === 0) {
-      newErrors.items = "At least one line item is required"
-    } else {
-      // Check if all items have names
-      const hasEmptyItems = items.some(item => !item.name.trim())
-      if (hasEmptyItems) {
-        newErrors.items = "All line items must have a name"
-      }
+    if (!amount || Number.parseFloat(amount) <= 0) {
+      newErrors.amount = "Amount must be greater than 0"
     }
 
     if (!dueDate) {
@@ -104,21 +101,15 @@ export default function CreateInvoicePage() {
     addToast("Item removed", "info")
   }
 
-  const handleItemChange = (id: string, field: string, value: string) => {
+  const handleItemChange = (id: string, field: string, value: any) => {
     setItems(
       items.map((item) => {
         if (item.id === id) {
-          if (field === "name") {
-            return { ...item, name: value }
-          } else if (field === "quantity") {
-            const qty = Number.parseFloat(value) || 0
-            const amount = qty * item.rate
-            return { ...item, quantity: qty, amount }
-          } else if (field === "rate") {
-            const rate = Number.parseFloat(value) || 0
-            const amount = item.quantity * rate
-            return { ...item, rate, amount }
+          const updated = { ...item, [field]: value }
+          if (field === "quantity" || field === "rate") {
+            updated.amount = (updated.quantity || 0) * (updated.rate || 0)
           }
+          return updated
         }
         return item
       }),
@@ -136,18 +127,18 @@ export default function CreateInvoicePage() {
     setIsLoading(true)
 
     try {
-      const subtotal = calculateSubtotal()
+      const amountNum = Number.parseFloat(amount)
       const vatAmount = calculateVAT()
       const total = calculateTotal()
       const invoiceNumber = `MGL${Math.floor(Math.random() * 1000000)}`
 
       const newInvoice = {
+        id: Date.now().toString(),
         clientName,
         clientEmail,
-        clientAddress: clientAddress.trim() || undefined,
         clientAvatar: clientName.substring(0, 2).toUpperCase(),
-        amount: subtotal,
-        vat: Number.parseFloat(vat) || 0,
+        amount: amountNum,
+        vat: Number.parseFloat(vat),
         vatAmount,
         total,
         dueDate,
@@ -157,11 +148,10 @@ export default function CreateInvoicePage() {
         items,
       }
 
-      await addInvoice(newInvoice)
+      addInvoice(newInvoice)
       addToast(`Invoice ${invoiceNumber} created successfully!`, "success")
       setTimeout(() => router.push("/invoices"), 800)
     } catch (error) {
-      console.error("Invoice creation error:", error)
       addToast("Failed to create invoice. Please try again.", "error")
     } finally {
       setIsLoading(false)
@@ -210,16 +200,6 @@ export default function CreateInvoicePage() {
                       />
                       {errors.clientEmail && <p className="text-xs text-red-500 mt-1">{errors.clientEmail}</p>}
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-foreground block mb-2">Client Address</label>
-                      <Input
-                        type="text"
-                        placeholder="Enter client address (optional)"
-                        value={clientAddress}
-                        onChange={(e) => setClientAddress(e.target.value)}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">Optional - Will be displayed on invoice if provided</p>
-                    </div>
                   </div>
                 </Card>
 
@@ -256,7 +236,7 @@ export default function CreateInvoicePage() {
                               type="number"
                               min="1"
                               value={item.quantity}
-                              onChange={(e) => handleItemChange(item.id, "quantity", e.target.value)}
+                              onChange={(e) => handleItemChange(item.id, "quantity", Number.parseFloat(e.target.value))}
                             />
                           </div>
                           <div className="w-24">
@@ -265,7 +245,7 @@ export default function CreateInvoicePage() {
                               type="number"
                               step="0.01"
                               value={item.rate}
-                              onChange={(e) => handleItemChange(item.id, "rate", e.target.value)}
+                              onChange={(e) => handleItemChange(item.id, "rate", Number.parseFloat(e.target.value))}
                             />
                           </div>
                           <div className="w-24">
@@ -283,10 +263,7 @@ export default function CreateInvoicePage() {
                       ))}
                     </div>
                   ) : (
-                    <div>
-                      <p className="text-muted-foreground text-sm py-4">No items added yet</p>
-                      {errors.items && <p className="text-xs text-red-500 mt-1">{errors.items}</p>}
-                    </div>
+                    <p className="text-muted-foreground text-sm py-4">No items added yet</p>
                   )}
                 </Card>
 
@@ -323,6 +300,25 @@ export default function CreateInvoicePage() {
 
                   <div className="space-y-4 mb-6">
                     <div>
+                      <label className="text-sm font-medium text-foreground block mb-2">Amount *</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-3 text-muted-foreground">₦</span>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={amount}
+                          onChange={(e) => {
+                            setAmount(e.target.value)
+                            if (errors.amount) setErrors({ ...errors, amount: "" })
+                          }}
+                          className={`pl-8 ${errors.amount ? "border-red-500" : ""}`}
+                        />
+                      </div>
+                      {errors.amount && <p className="text-xs text-red-500 mt-1">{errors.amount}</p>}
+                    </div>
+
+                    <div>
                       <label className="text-sm font-medium text-foreground block mb-2">VAT (%)</label>
                       <Input type="number" step="0.1" value={vat} onChange={(e) => setVat(e.target.value)} />
                     </div>
@@ -332,7 +328,7 @@ export default function CreateInvoicePage() {
                   <div className="space-y-2 border-t border-border pt-4 mb-6">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal</span>
-                      <span className="font-medium">₦{calculateSubtotal().toFixed(2)}</span>
+                      <span className="font-medium">₦{Number.parseFloat(amount || "0").toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">VAT Amount</span>

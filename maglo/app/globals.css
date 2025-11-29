@@ -1,7 +1,10 @@
 /* Tailwind v4 core import */
 @import "tailwindcss";
 
-/* Tailwind v4 custom variant */
+/* Animation plugin (this is fine if installed) */
+@import "tw-animate-css";
+
+/* Tailwind v4 custom variant (valid) */
 @custom-variant dark (&:is(.dark *));
 
 /* Light mode variables */
@@ -131,13 +134,4 @@
   body {
     @apply bg-background text-foreground;
   }
-}
-
-/* Animation utilities */
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
 }

@@ -3,14 +3,12 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { account, databases, ID, DATABASE_ID, INVOICES_COLLECTION_ID } from "./appwrite"
 import { Query } from "appwrite"
-import { cleanupAppwriteCookies, hasCorruptedAuthState } from "./cookie-cleanup"
 
 export interface Invoice {
   id: string
   clientName: string
   clientEmail: string
   clientAvatar?: string
-  clientAddress?: string 
   amount: number
   vat: number
   vatAmount: number
@@ -65,15 +63,6 @@ export function MagloProvider({ children }: { children: ReactNode }) {
 
   // Check authentication on mount
   useEffect(() => {
-    // CRITICAL FIX: Check for corrupted cookies before checking auth
-    if (hasCorruptedAuthState()) {
-      console.log('⚠️ Detected corrupted auth state, cleaning up...')
-      cleanupAppwriteCookies()
-      // Force reload to ensure clean state
-      window.location.reload()
-      return
-    }
-    
     checkAuth()
   }, [])
 
@@ -88,7 +77,6 @@ export function MagloProvider({ children }: { children: ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      console.log('🔍 Checking authentication...')
       const session = await account.get()
       console.log('✅ Active session found:', session.$id)
       
@@ -100,15 +88,8 @@ export function MagloProvider({ children }: { children: ReactNode }) {
       }
       
       setUser(authenticatedUser)
-    } catch (error: any) {
-      console.log('ℹ️ No active session:', error.message)
-      
-      // If we get an auth error, clean up any stale cookies
-      if (error.code === 401 || error.type === 'general_unauthorized_scope') {
-        console.log('🧹 Cleaning up stale cookies...')
-        cleanupAppwriteCookies()
-      }
-      
+    } catch (error) {
+      console.log('ℹ️ No active session')
       setUser(null)
     } finally {
       setIsLoading(false)
@@ -117,16 +98,9 @@ export function MagloProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      // Clean up any existing sessions
       console.log('🔐 Initiating login...')
-      
-      // CRITICAL FIX: Clean up ALL cookies before login
-      cleanupAppwriteCookies()
-      
-      // Small delay to ensure cookies are cleared
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
       try {
-        // Try to delete any existing sessions
         const sessions = await account.listSessions()
         if (sessions.sessions.length > 0) {
           console.log('🧹 Cleaning up', sessions.sessions.length, 'existing session(s)')
@@ -154,16 +128,15 @@ export function MagloProvider({ children }: { children: ReactNode }) {
         avatar: userData.name.substring(0, 2).toUpperCase(),
       }
       
-      // Update user state
+      // Update user state - this will trigger useEffect in sign-in form
       setUser(authenticatedUser)
       console.log('✅ User state updated:', authenticatedUser.email)
       
+      // Return successfully - no delay needed here
       return Promise.resolve()
       
     } catch (error: any) {
       console.error('❌ Login error:', error)
-      // Clean up on error
-      cleanupAppwriteCookies()
       throw new Error(error.message || "Login failed")
     }
   }
@@ -172,12 +145,7 @@ export function MagloProvider({ children }: { children: ReactNode }) {
     try {
       console.log('📝 Initiating signup...')
       
-      // CRITICAL FIX: Clean up ALL cookies before signup
-      cleanupAppwriteCookies()
-      
-      // Small delay to ensure cookies are cleared
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
+      // Clean up any existing sessions
       try {
         const sessions = await account.listSessions()
         if (sessions.sessions.length > 0) {
@@ -217,8 +185,6 @@ export function MagloProvider({ children }: { children: ReactNode }) {
       
     } catch (error: any) {
       console.error('❌ Signup error:', error)
-      // Clean up on error
-      cleanupAppwriteCookies()
       throw new Error(error.message || "Signup failed")
     }
   }
@@ -226,26 +192,12 @@ export function MagloProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       console.log('🚪 Logging out...')
-      
-      // Delete current session from Appwrite
-      try {
-        await account.deleteSession("current")
-      } catch (error) {
-        console.log('ℹ️ No session to delete on server')
-      }
-      
-      // CRITICAL FIX: Always clean up cookies, even if API call fails
-      cleanupAppwriteCookies()
-      
-      // Clear state
+      await account.deleteSession("current")
       setUser(null)
       setInvoices([])
-      
       console.log('✅ Logged out successfully')
     } catch (error: any) {
       console.error('❌ Logout error:', error)
-      // Still clean up cookies even on error
-      cleanupAppwriteCookies()
       throw new Error(error.message || "Logout failed")
     }
   }
