@@ -13,14 +13,14 @@ export default function Sidebar() {
   const isActive = (path: string) => pathname === path
 
   const handleLogout = async () => {
-  try {
-    await logout()
-    router.push("/signin")
-    router.refresh()
-  } catch (error) {
-    console.error("Logout failed:", error)
+    try {
+      await logout()
+      router.push("/")
+      router.refresh()
+    } catch (error) {
+      console.error("Logout failed:", error)
+    }
   }
-}
 
   return (
     <div className="w-56 bg-background border-r border-border h-screen flex flex-col p-6 overflow-hidden fixed left-0 top-0">
@@ -147,7 +147,7 @@ export default function Sidebar() {
 
         <button
           onClick={handleLogout}
-          className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+          className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-red-50 transition-colors"
         >
           <Image
             src="/icons/logout-inactive.png"
