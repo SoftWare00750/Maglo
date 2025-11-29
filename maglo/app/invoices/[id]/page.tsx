@@ -2,9 +2,8 @@
 
 import { useMaglo } from "@/lib/context"
 import { useParams, useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useToast } from "@/lib/toast"
-import { useEffect } from "react"
 import Sidebar from "@/components/ui/sidebar"
 import TopBar from "@/components/ui/top-bar"
 import Image from "next/image"
@@ -13,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ToastContainer } from "@/components/toasts/toast-container"
-import { MoreVertical, Eye, Download, Plus, Trash2 } from "lucide-react"
+import { MoreVertical, Eye, Download, Plus, Trash2, Menu, X, ArrowLeft } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 
 export default function InvoiceDetailPage() {
@@ -24,8 +23,7 @@ export default function InvoiceDetailPage() {
   const invoiceId = Array.isArray(params.id) ? params.id[0] : params.id ?? ""
   const invoice = getInvoiceById(invoiceId)
   const [showAddItem, setShowAddItem] = useState(false)
-
-
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     if (invoice) {
@@ -39,9 +37,9 @@ export default function InvoiceDetailPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Sidebar />
-        <div className="ml-56">
+        <div className="lg:ml-56">
           <TopBar title="Invoice Not Found" />
-          <main className="p-8">
+          <main className="p-4 sm:p-6 lg:p-8">
             <p className="text-foreground">Invoice not found</p>
           </main>
         </div>
@@ -69,12 +67,46 @@ export default function InvoiceDetailPage() {
   return (
     <>
       <div className="min-h-screen bg-gray-50">
-        <Sidebar />
-        <div className="ml-56">
-          <TopBar title={`Invoice: ${invoice.invoiceNumber}`} />
-          <main className="p-8">
+        {/* Mobile Menu Toggle */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="fixed top-4 left-4 z-50 lg:hidden p-2 bg-white rounded-lg shadow-md"
+        >
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+
+        {/* Sidebar with mobile overlay */}
+        <div className={`fixed inset-0 z-40 lg:hidden ${isMobileMenuOpen ? 'block' : 'hidden'}`}>
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <div className="relative">
+            <Sidebar />
+          </div>
+        </div>
+
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block">
+          <Sidebar />
+        </div>
+
+        <div className="lg:ml-56">
+          {/* Mobile Back Button */}
+          <div className="lg:hidden flex items-center gap-2 p-4 bg-white border-b">
+            <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-lg">
+              <ArrowLeft size={20} />
+            </button>
+            <h1 className="text-lg font-bold">Invoice: {invoice.invoiceNumber}</h1>
+          </div>
+
+          <div className="hidden lg:block">
+            <TopBar title={`Invoice: ${invoice.invoiceNumber}`} />
+          </div>
+
+          <main className="p-4 sm:p-6 lg:p-8">
             {/* Three Dots Menu - Top Right */}
-            <div className="flex items-center justify-end mb-8">
+            <div className="flex items-center justify-end mb-4 sm:mb-6 lg:mb-8">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="p-2 hover:bg-secondary rounded transition-colors">
@@ -92,62 +124,59 @@ export default function InvoiceDetailPage() {
               </DropdownMenu>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               {/* Left Side - Invoice Details */}
-              <div className="lg:col-span-2 space-y-6">
+              <div className="lg:col-span-2 space-y-4 sm:space-y-6">
                 {/* Company Info */}
-                <Card className="bg-gray-800 text-white p-6 rounded-lg">
-                  <div className="flex justify-between items-start mb-4">
+                <Card className="bg-gray-800 text-white p-4 sm:p-6 rounded-lg">
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
                     <div className="flex items-center gap-3">
-                      {/* Logo Placeholder */}
-                        <Image
-            src="/logo2.png"
-            alt="Maglo Logo"
-            width={32}
-            height={32}
-            className="rounded"
-          />
-            
-          
-                    
+                      <Image
+                        src="/logo2.png"
+                        alt="Maglo Logo"
+                        width={28}
+                        height={28}
+                        className="rounded sm:w-8 sm:h-8"
+                      />
                       <div>
-                        <p className="text-2xl font-bold mb-1">Maglo</p>
-                        <p className="text-sm text-gray-300">sales@maglo.com</p>
+                        <p className="text-xl sm:text-2xl font-bold mb-1">Maglo</p>
+                        <p className="text-xs sm:text-sm text-gray-300">sales@maglo.com</p>
                       </div>
                     </div>
-                    <div className="text-right text-sm text-gray-300">
+                    <div className="text-left sm:text-right text-xs sm:text-sm text-gray-300">
                       <p>1333 Grey Fox Farm Road</p>
                       <p>Houston, TX 77060</p>
-                      <p>Bloomfield Hills, Michigan(MI), 48301</p>
+                      <p className="hidden sm:block">Bloomfield Hills, Michigan(MI), 48301</p>
                     </div>
                   </div>
                 </Card>
 
                 {/* Invoice Number & Dates */}
-                <Card className="p-6 bg-white rounded-lg border border-border">
-                  <div className="grid grid-cols-2 gap-8">
+                <Card className="p-4 sm:p-6 bg-white rounded-lg border border-border">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
                     <div>
                       <h3 className="font-bold text-foreground mb-3">Invoice Number</h3>
-                      <p className="text-lg font-semibold text-foreground mb-4">{invoice.invoiceNumber}</p>
+                      <p className="text-base sm:text-lg font-semibold text-foreground mb-4">{invoice.invoiceNumber}</p>
                       <p className="text-sm text-muted-foreground">Issued Date: {invoice.issuedDate}</p>
                       <p className="text-sm text-muted-foreground">Due Date: {invoice.dueDate}</p>
                     </div>
                     <div>
                       <h3 className="font-bold text-foreground mb-3">Billed to</h3>
                       <p className="font-medium text-foreground">{invoice.clientName}</p>
-                      <p className="text-sm text-muted-foreground">{invoice.clientEmail}</p>
+                      <p className="text-sm text-muted-foreground break-all">{invoice.clientEmail}</p>
                     </div>
                   </div>
                 </Card>
 
                 {/* Item Details */}
-                <Card className="p-6 bg-white rounded-lg border border-border">
-                  <div className="mb-6">
+                <Card className="p-4 sm:p-6 bg-white rounded-lg border border-border">
+                  <div className="mb-4 sm:mb-6">
                     <h3 className="font-bold text-foreground mb-1">Item Details</h3>
                     <p className="text-sm text-muted-foreground">Details item with more info</p>
                   </div>
 
-                  <div className="overflow-x-auto mb-6">
+                  {/* Desktop Table */}
+                  <div className="hidden sm:block overflow-x-auto mb-6">
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-border">
@@ -178,6 +207,26 @@ export default function InvoiceDetailPage() {
                     </table>
                   </div>
 
+                  {/* Mobile Card List */}
+                  <div className="sm:hidden space-y-3 mb-6">
+                    {invoice.items && invoice.items.length > 0 ? (
+                      invoice.items.map((item) => (
+                        <div key={item.id} className="p-3 border border-border rounded-lg">
+                          <div className="flex justify-between items-start mb-2">
+                            <p className="font-medium text-foreground">{item.name}</p>
+                            <p className="font-semibold text-foreground">₦{item.amount.toFixed(2)}</p>
+                          </div>
+                          <div className="flex justify-between text-sm text-muted-foreground">
+                            <span>Qty: {item.quantity}</span>
+                            <span>Rate: ₦{item.rate.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-center text-muted-foreground py-4">No items found</p>
+                    )}
+                  </div>
+
                   <button
                     onClick={() => setShowAddItem(!showAddItem)}
                     className="text-primary font-medium text-sm hover:underline flex items-center gap-1 mb-4"
@@ -188,30 +237,30 @@ export default function InvoiceDetailPage() {
 
                   {/* Totals */}
                   <div className="space-y-2 border-t border-border pt-4">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal</span>
                       <span className="font-medium text-foreground">₦{invoice.amount.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Discount</span>
                       <button className="text-primary font-medium text-sm">Add</button>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Tax</span>
                       <button className="text-primary font-medium text-sm">Add</button>
                     </div>
                     <div className="flex justify-between border-t border-border pt-3 mt-3">
                       <span className="font-semibold text-foreground">Total</span>
-                      <span className="font-bold text-lg text-foreground">₦{invoice.total.toFixed(2)}</span>
+                      <span className="font-bold text-base sm:text-lg text-foreground">₦{invoice.total.toFixed(2)}</span>
                     </div>
                   </div>
                 </Card>
               </div>
 
               {/* Right Side - Actions & Client Info */}
-              <div className="lg:col-span-1 space-y-6">
+              <div className="lg:col-span-1 space-y-4 sm:space-y-6">
                 {/* Client Details */}
-                <Card className="p-6 bg-white rounded-lg border border-border">
+                <Card className="p-4 sm:p-6 bg-white rounded-lg border border-border">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-foreground">Client Details</h3>
                     <button className="p-1 hover:bg-secondary rounded">
@@ -220,12 +269,12 @@ export default function InvoiceDetailPage() {
                   </div>
 
                   <div className="flex items-center space-x-3 mb-6">
-                    <Avatar className="w-12 h-12 bg-primary text-primary-foreground">
+                    <Avatar className="w-10 h-10 sm:w-12 sm:h-12 bg-primary text-primary-foreground">
                       <AvatarFallback>{invoice.clientAvatar}</AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="font-medium text-foreground">{invoice.clientName}</p>
-                      <p className="text-xs text-muted-foreground">{invoice.clientEmail}</p>
+                      <p className="text-xs text-muted-foreground break-all">{invoice.clientEmail}</p>
                     </div>
                   </div>
 
@@ -236,14 +285,14 @@ export default function InvoiceDetailPage() {
                         ✓ 3471 Rainy Day Drive Tulsa, USA
                       </p>
                     </div>
-                    <Button className="w-full text-primary font-medium text-sm border border-primary bg-transparent hover:bg-primary/10">
+                    <Button className="w-full text-primary font-medium text-sm border border-primary bg-transparent hover:bg-primary/10 h-10">
                       Add Customer
                     </Button>
                   </div>
                 </Card>
 
                 {/* Basic Info */}
-                <Card className="p-6 bg-white rounded-lg border border-border">
+                <Card className="p-4 sm:p-6 bg-white rounded-lg border border-border">
                   <h3 className="font-bold text-foreground mb-4">Basic Info</h3>
                   <div className="space-y-4">
                     <div>
@@ -258,7 +307,7 @@ export default function InvoiceDetailPage() {
                 </Card>
 
                 {/* Status & Actions */}
-                <Card className="p-6 bg-white rounded-lg border border-border space-y-4">
+                <Card className="p-4 sm:p-6 bg-white rounded-lg border border-border space-y-4">
                   <div>
                     <label className="text-xs font-semibold text-muted-foreground block mb-2">Status</label>
                     <Badge
@@ -277,7 +326,7 @@ export default function InvoiceDetailPage() {
                   {invoice.status !== "Paid" && (
                     <Button
                       onClick={() => handleStatusChange("Paid")}
-                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 sm:h-11"
                     >
                       Mark as Paid
                     </Button>
@@ -285,19 +334,19 @@ export default function InvoiceDetailPage() {
 
                   <Button
                     onClick={handleSendInvoice}
-                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 sm:h-11"
                   >
                     Send Invoice
                   </Button>
 
                   <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1 flex items-center justify-center gap-2 bg-transparent">
+                    <Button variant="outline" className="flex-1 flex items-center justify-center gap-2 bg-transparent h-10">
                       <Eye size={16} />
-                      Preview
+                      <span className="hidden sm:inline">Preview</span>
                     </Button>
-                    <Button variant="outline" className="flex-1 flex items-center justify-center gap-2 bg-transparent">
+                    <Button variant="outline" className="flex-1 flex items-center justify-center gap-2 bg-transparent h-10">
                       <Download size={16} />
-                      Download
+                      <span className="hidden sm:inline">Download</span>
                     </Button>
                   </div>
                 </Card>
