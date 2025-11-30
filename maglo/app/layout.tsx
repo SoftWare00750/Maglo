@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { MagloProvider } from "@/lib/context"
-import { MobileLayout } from "@/components/layout/mobile-layout"
+
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
@@ -44,9 +44,9 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <MagloProvider>
-          <MobileLayout>
+          
             {children}
-          </MobileLayout>
+         
         </MagloProvider>
         {/*<Analytics />*/}
       </body>
