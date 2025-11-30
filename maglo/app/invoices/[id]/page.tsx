@@ -23,7 +23,7 @@ export default function InvoiceDetailPage() {
   const invoiceId = Array.isArray(params.id) ? params.id[0] : params.id ?? ""
   const invoice = getInvoiceById(invoiceId)
   const [showAddItem, setShowAddItem] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
 
   useEffect(() => {
     if (invoice) {
@@ -77,25 +77,8 @@ export default function InvoiceDetailPage() {
   return (
     <>
       <div className="min-h-screen bg-gray-50">
-        {/* Mobile Menu Toggle */}
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="fixed top-4 left-4 z-50 lg:hidden p-2 bg-white rounded-lg shadow-md"
-        >
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-
-        {/* Sidebar with mobile overlay */}
-        <div className={`fixed inset-0 z-40 lg:hidden ${isMobileMenuOpen ? 'block' : 'hidden'}`}>
-          <div 
-            className="absolute inset-0 bg-black bg-opacity-50"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-          <div className="relative">
-            <Sidebar />
-          </div>
-        </div>
-
+        
+       
         {/* Desktop Sidebar */}
         <div className="hidden lg:block">
           <Sidebar />
