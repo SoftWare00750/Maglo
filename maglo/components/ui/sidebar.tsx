@@ -1,20 +1,25 @@
+// components/ui/sidebar.tsx
 "use client"
 
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { useMaglo } from "@/lib/context"
+import { useMobileNav } from "@/lib/use-mobile-nav"
+import { X } from "lucide-react"
 
 export default function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { logout } = useMaglo()
+  const { isMobileMenuOpen, setIsMobileMenuOpen } = useMobileNav()
 
   const isActive = (path: string) => pathname === path
 
   const handleLogout = async () => {
     try {
       await logout()
+      setIsMobileMenuOpen(false)
       router.push("/")
       router.refresh()
     } catch (error) {
@@ -22,8 +27,68 @@ export default function Sidebar() {
     }
   }
 
+  const handleNavClick = () => {
+    // Close mobile menu when a nav item is clicked
+    if (window.innerWidth < 1024) {
+      setIsMobileMenuOpen(false)
+    }
+  }
+
   return (
-    <div className="w-56 bg-background border-r border-border h-screen flex flex-col p-6 overflow-hidden fixed left-0 top-0">
+    <>
+      {/* Desktop Sidebar - Hidden on mobile */}
+      <div className="hidden lg:block w-56 bg-background border-r border-border h-screen flex-col p-6 overflow-hidden fixed left-0 top-0">
+        <SidebarContent 
+          isActive={isActive} 
+          handleLogout={handleLogout}
+          onNavClick={handleNavClick}
+        />
+      </div>
+
+      {/* Mobile Sidebar - Overlay */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          
+          {/* Sidebar */}
+          <div className="relative w-64 h-full bg-background border-r border-border flex flex-col p-6 overflow-y-auto">
+            {/* Close button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-secondary rounded-lg transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <SidebarContent 
+              isActive={isActive} 
+              handleLogout={handleLogout}
+              onNavClick={handleNavClick}
+            />
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+function SidebarContent({ 
+  isActive, 
+  handleLogout, 
+  onNavClick 
+}: { 
+  isActive: (path: string) => boolean
+  handleLogout: () => void
+  onNavClick: () => void
+}) {
+  const pathname = usePathname()
+  
+  return (
+    <>
       {/* Logo */}
       <div className="mb-8 flex-shrink-0">
         <div className="flex items-center gap-2">
@@ -40,7 +105,7 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-2 overflow-y-auto">
-        <Link href="/dashboard">
+        <Link href="/dashboard" onClick={onNavClick}>
           <div
             className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
               isActive("/dashboard")
@@ -58,7 +123,7 @@ export default function Sidebar() {
           </div>
         </Link>
 
-        <Link href="/transactions">
+        <Link href="/transactions" onClick={onNavClick}>
           <div
             className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
               isActive("/transactions")
@@ -76,7 +141,7 @@ export default function Sidebar() {
           </div>
         </Link>
 
-        <Link href="/invoices">
+        <Link href="/invoices" onClick={onNavClick}>
           <div
             className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
               isActive("/invoices") || pathname.startsWith("/invoices")
@@ -94,7 +159,7 @@ export default function Sidebar() {
           </div>
         </Link>
 
-        <Link href="/wallets">
+        <Link href="/wallets" onClick={onNavClick}>
           <div
             className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
               isActive("/wallets")
@@ -112,7 +177,7 @@ export default function Sidebar() {
           </div>
         </Link>
 
-        <Link href="/settings">
+        <Link href="/settings" onClick={onNavClick}>
           <div
             className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
               isActive("/settings")
@@ -132,8 +197,8 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom */}
-      <div className="space-y-2 flex-shrink-0">
-        <Link href="/help">
+      <div className="space-y-2 flex-shrink-0 mt-4">
+        <Link href="/help" onClick={onNavClick}>
           <div className="flex items-center space-x-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
             <Image
               src={isActive("/help") ? "/icons/help-active.png" : "/icons/help-inactive.png"}
@@ -158,6 +223,6 @@ export default function Sidebar() {
           <span className="font-medium">Logout</span>
         </button>
       </div>
-    </div>
+    </>
   )
 }

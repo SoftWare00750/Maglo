@@ -1,8 +1,10 @@
+// lib/context.tsx - Update this file
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { account, databases, ID, DATABASE_ID, INVOICES_COLLECTION_ID } from "./appwrite"
 import { Query } from "appwrite"
+import { MobileNavProvider } from "./use-mobile-nav"
 
 export interface Invoice {
   id: string
@@ -98,7 +100,6 @@ export function MagloProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      // Clean up any existing sessions
       console.log('🔐 Initiating login...')
       try {
         const sessions = await account.listSessions()
@@ -112,12 +113,10 @@ export function MagloProvider({ children }: { children: ReactNode }) {
         console.log('ℹ️ No existing sessions to clean')
       }
 
-      // Create new session
       console.log('🔑 Creating session for:', email)
       const session = await account.createEmailPasswordSession(email, password)
       console.log('✅ Session created:', session.$id)
       
-      // Get user data
       const userData = await account.get()
       console.log('✅ User data retrieved:', userData.$id)
       
@@ -128,11 +127,9 @@ export function MagloProvider({ children }: { children: ReactNode }) {
         avatar: userData.name.substring(0, 2).toUpperCase(),
       }
       
-      // Update user state - this will trigger useEffect in sign-in form
       setUser(authenticatedUser)
       console.log('✅ User state updated:', authenticatedUser.email)
       
-      // Return successfully - no delay needed here
       return Promise.resolve()
       
     } catch (error: any) {
@@ -145,7 +142,6 @@ export function MagloProvider({ children }: { children: ReactNode }) {
     try {
       console.log('📝 Initiating signup...')
       
-      // Clean up any existing sessions
       try {
         const sessions = await account.listSessions()
         if (sessions.sessions.length > 0) {
@@ -158,17 +154,14 @@ export function MagloProvider({ children }: { children: ReactNode }) {
         console.log('ℹ️ No existing sessions')
       }
 
-      // Create account
       console.log('🆕 Creating account for:', email)
       await account.create(ID.unique(), email, password, name)
       console.log('✅ Account created')
       
-      // Auto-login
       console.log('🔐 Logging in new user...')
       const session = await account.createEmailPasswordSession(email, password)
       console.log('✅ Session created:', session.$id)
       
-      // Get user data
       const userData = await account.get()
       const authenticatedUser = {
         id: userData.$id,
@@ -177,7 +170,6 @@ export function MagloProvider({ children }: { children: ReactNode }) {
         avatar: userData.name.substring(0, 2).toUpperCase(),
       }
       
-      // Update user state
       setUser(authenticatedUser)
       console.log('✅ User registered and logged in:', authenticatedUser.email)
       
@@ -366,7 +358,9 @@ export function MagloProvider({ children }: { children: ReactNode }) {
         checkAuth,
       }}
     >
-      {children}
+      <MobileNavProvider>
+        {children}
+      </MobileNavProvider>
     </MagloContext.Provider>
   )
 }

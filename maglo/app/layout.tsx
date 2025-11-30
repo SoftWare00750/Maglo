@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { MagloProvider } from "@/lib/context"
+import { MobileLayout } from "@/components/layout/mobile-layout"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
@@ -26,6 +27,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
   },
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
 }
 
 export default function RootLayout({
@@ -38,9 +40,14 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/logo.png" type="image/png" sizes="32x32" />
         <link rel="apple-touch-icon" href="/logo.png" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <MagloProvider>{children}</MagloProvider>
+        <MagloProvider>
+          <MobileLayout>
+            {children}
+          </MobileLayout>
+        </MagloProvider>
         {/*<Analytics />*/}
       </body>
     </html>

@@ -1,3 +1,4 @@
+// app/dashboard/page.tsx
 "use client"
 
 import { useEffect } from "react"
@@ -37,12 +38,12 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="ml-56">
+      <div className="lg:ml-56">
         <TopBar title="Dashboard" />
-        <main className="p-8">
+        <main className="p-4 sm:p-6 lg:p-8">
           <DashboardMetrics />
           <WorkingCapitalChart />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-4 sm:mb-6 lg:mb-8">
             <VATSummary />
             <DueDateTracker />
           </div>
