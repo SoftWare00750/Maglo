@@ -193,7 +193,7 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
                     <img 
                       src="/curve2.png" 
                       alt="Decorative curve" 
-                      className="hidden md:inline-block ml-45"
+                      className="hidden md:inline-block ml-36"
                     />
                   </span>
                   {/* Mobile curved image - positioned under the link */}
