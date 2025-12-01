@@ -71,6 +71,7 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
       try {
         const sessions = await account.listSessions()
         if (sessions.sessions.length > 0) {
+          console.log('🧹 Cleaning up existing sessions')
           for (const session of sessions.sessions) {
             await account.deleteSession(session.$id)
           }
@@ -79,10 +80,9 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
         console.log('ℹ️ No existing sessions')
       }
 
-      // Create account
-      console.log('📝 Creating account for:', email)
+      console.log('🆕 Creating account for:', email)
       await account.create(ID.unique(), email, password, fullName)
-      console.log('✅ Account created successfully')
+      console.log('✅ Account created')
       
       // Show success message
       addToast("Account created successfully! Please sign in.", "success")
@@ -193,7 +193,7 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
                 </Button>
 
                 {/* Sign In Link */}
-                <div className="text-center pt-4">
+                <div className="text-center pt-4 relative">
                   <span className="text-sm text-muted-foreground">
                     Already have an account?{" "}
                     <button
@@ -204,13 +204,18 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
                     >
                       Sign in
                     </button>
-
-                    <img 
-                      src="/curve1.png" 
-                      alt="Decorative curve" 
-                      className="ml-72"
-                    />
                   </span>
+                  <img 
+                    src="/curve1.png" 
+                    alt="Decorative curve" 
+                    className="hidden md:inline-block md:ml-72 absolute md:relative"
+                  />
+                  {/* Mobile curved image - positioned under the link */}
+                  <img 
+                    src="/curve1.png" 
+                    alt="Decorative curve" 
+                    className="md:hidden mt-1 ml-40"
+                  />
                 </div>
               </form>
             </div>
