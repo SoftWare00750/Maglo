@@ -208,14 +208,14 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
                     <img 
                       src="/curve1.png" 
                       alt="Decorative curve" 
-                      className="hidden md:inline-block ml-72"
+                      className="hidden md:inline-block ml-55"
                     />
                   </span>
                   {/* Mobile curved image - positioned under the link */}
                   <img 
                     src="/curve1.png" 
                     alt="Decorative curve" 
-                    className="md:hidden mt-1 ml-40 inline-block"
+                    className="md:hidden mt-1 ml-27 inline-block"
                   />
                 </div>
               </form>
