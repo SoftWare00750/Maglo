@@ -178,7 +178,7 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
                 </Button>
 
                 {/* Sign Up Link */}
-                <div className="text-center pt-4 relative">
+                <div className="text-center pt-4">
                   <span className="text-sm text-muted-foreground">
                     Don't have an account?{" "}
                     <button
@@ -189,17 +189,18 @@ export default function SignInForm({ onToggle }: SignInFormProps) {
                     >
                       Sign up for free
                     </button>
+                    {/* Desktop curved image - positioned inline */}
+                    <img 
+                      src="/curve2.png" 
+                      alt="Decorative curve" 
+                      className="hidden md:inline-block ml-64"
+                    />
                   </span>
-                  <img 
-                    src="/curve2.png" 
-                    alt="Decorative curve" 
-                    className="hidden md:inline-block md:ml-64 absolute md:relative"
-                  />
                   {/* Mobile curved image - positioned under the link */}
                   <img 
                     src="/curve2.png" 
                     alt="Decorative curve" 
-                    className="md:hidden mt-1 ml-32"
+                    className="md:hidden mt-1 ml-32 inline-block"
                   />
                 </div>
               </form>

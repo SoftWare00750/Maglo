@@ -193,7 +193,7 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
                 </Button>
 
                 {/* Sign In Link */}
-                <div className="text-center pt-4 relative">
+                <div className="text-center pt-4">
                   <span className="text-sm text-muted-foreground">
                     Already have an account?{" "}
                     <button
@@ -204,17 +204,18 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
                     >
                       Sign in
                     </button>
+                    {/* Desktop curved image - positioned inline */}
+                    <img 
+                      src="/curve1.png" 
+                      alt="Decorative curve" 
+                      className="hidden md:inline-block ml-72"
+                    />
                   </span>
-                  <img 
-                    src="/curve1.png" 
-                    alt="Decorative curve" 
-                    className="hidden md:inline-block md:ml-72 absolute md:relative"
-                  />
                   {/* Mobile curved image - positioned under the link */}
                   <img 
                     src="/curve1.png" 
                     alt="Decorative curve" 
-                    className="md:hidden mt-1 ml-40"
+                    className="md:hidden mt-1 ml-40 inline-block"
                   />
                 </div>
               </form>
