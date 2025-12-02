@@ -204,20 +204,29 @@ export default function SignUpForm({ onToggle }: SignUpFormProps) {
                     >
                       Sign in
                     </button>
-                    {/* Desktop curved image - positioned inline */}
+                   
+                  </span>
+
+                    <div>
+
+                     {/* Desktop curved image - positioned inline */}
                     <img 
                       src="/curve1.png" 
                       alt="Decorative curve" 
-                      className="hidden md:inline-block ml-16"
+                      className="hidden md:inline-block ml-43"
                     />
-                  </span>
+
+
+                    </div>
+
                   {/* Mobile curved image - positioned under the link */}
                   <img 
                     src="/curve1.png" 
                     alt="Decorative curve" 
-                    className="md:hidden mt-1 ml-16 inline-block"
+                    className="md:hidden mt-1 ml-43 inline-block"
                   />
                 </div>
+                
               </form>
             </div>
           </div>
